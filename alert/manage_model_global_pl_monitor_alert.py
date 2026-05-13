@@ -216,7 +216,7 @@ def format_alert_message(rows):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
         "🚨 StarRocks PL监控告警",
-        f"集群: 墨西哥",
+        f"集群: 中国",
         f"告警原因: manage_model_global_pl_monitor 随机抽样告警记录: {len(rows)} 条",
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",

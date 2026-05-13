@@ -117,6 +117,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         message = module.format_alert_message(rows)
 
         self.assertIn("🚨 StarRocks PL监控告警", message)
+        self.assertIn("集群: 中国", message)
         self.assertIn("随机抽样告警记录: 1 条", message)
         self.assertIn("开始时间: 2026-05-13 10:00:00", message)
         self.assertIn("查询ID: query-001", message)
