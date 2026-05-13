@@ -71,6 +71,11 @@ class FakeConnection:
 
 
 class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
+    def test_default_mentions_yu_hongye(self):
+        module = load_module()
+
+        self.assertEqual(module.DEFAULT_MENTIONS, ["余红叶"])
+
     def test_fetch_random_rows_queries_random_ten_from_monitor_table(self):
         module = load_module()
         fake_conn = FakeConnection([{"query_id": "q1"}])

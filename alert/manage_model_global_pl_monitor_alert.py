@@ -46,7 +46,7 @@ DEFAULT_MENTIONS = [
     item.strip()
     for item in os.environ.get(
         "MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS",
-        "strongliu@kn.group,jerrycai@kn.group",
+        "余红叶",
     ).split(",")
     if item.strip()
 ]
