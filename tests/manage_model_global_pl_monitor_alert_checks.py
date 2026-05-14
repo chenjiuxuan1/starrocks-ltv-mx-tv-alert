@@ -75,10 +75,11 @@ class FakeConnection:
 
 
 class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
-    def test_default_mentions_yu_hongye(self):
+    def test_default_mentions_use_yu_hongye_email_for_highlight(self):
         module = load_module()
 
-        self.assertEqual(module.DEFAULT_MENTIONS, ["余红叶"])
+        self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group"])
+        self.assertEqual(module.DEFAULT_MENTION_LABELS, ["余红叶"])
 
     def test_fetch_random_rows_queries_random_one_from_monitor_table_by_default(self):
         module = load_module()
@@ -134,6 +135,8 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertIn("🚨 StarRocks PL监控告警", message)
         self.assertIn("集群: 中国", message)
         self.assertIn("告警原因: PL数据验证不通过 告警记录共: 1 条", message)
+        self.assertNotIn("select count(1)", message)
+        self.assertNotIn("这个查询的结果", message)
         self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
         self.assertIn("查询详情:https://data.kuainiu.io/question/12982-pl", message)
         self.assertIn("@余红叶", message)
@@ -206,7 +209,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
             with mock.patch.object(module, "send_to_tv", return_value={"success": True, "status_code": 200, "response": "ok"}) as send:
                 with mock.patch("builtins.print"):
                     result = module.run(
-                        mentions=["余红叶"],
+                        mentions=["adamyu@kn.group"],
                         sr_password="primary-secret",
                         sr_backup_password="backup-secret",
                     )
@@ -217,7 +220,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         sent["mentions"] = send.call_args.kwargs["mentions"]
         self.assertIn("告警记录共: 3 条", sent["message"])
         self.assertIn("@余红叶", sent["message"])
-        self.assertEqual(sent["mentions"], ["余红叶"])
+        self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
 
 
 if __name__ == "__main__":

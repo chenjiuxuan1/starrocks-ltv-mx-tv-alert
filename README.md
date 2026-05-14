@@ -28,6 +28,6 @@ python3 alert/manage_model_global_pl_monitor_alert.py \
 - 主账号: `e_load`
 - 备份账号: `e_backup`
 - TV Bot: `f82292a5-45c5-42ea-84da-272b4c81ebcc`
-- 默认 @ 人: `余红叶`
+- 默认 @ 人: `adamyu@kn.group`，正文显示 `@余红叶`
 
-可通过环境变量覆盖：`SR_HOST`、`SR_PORT`、`SR_DB`、`SR_USERNAME`、`SR_BACKUP_USERNAME`、`TV_API_URL`、`MANAGE_MODEL_GLOBAL_PL_TV_BOT_ID`、`MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS`。
+可通过环境变量覆盖：`SR_HOST`、`SR_PORT`、`SR_DB`、`SR_USERNAME`、`SR_BACKUP_USERNAME`、`TV_API_URL`、`MANAGE_MODEL_GLOBAL_PL_TV_BOT_ID`、`MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS`、`MANAGE_MODEL_GLOBAL_PL_TV_MENTION_LABELS`。

@@ -46,6 +46,14 @@ DEFAULT_MENTIONS = [
     item.strip()
     for item in os.environ.get(
         "MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS",
+        "adamyu@kn.group",
+    ).split(",")
+    if item.strip()
+]
+DEFAULT_MENTION_LABELS = [
+    item.strip()
+    for item in os.environ.get(
+        "MANAGE_MODEL_GLOBAL_PL_TV_MENTION_LABELS",
         "余红叶",
     ).split(",")
     if item.strip()
@@ -235,13 +243,13 @@ def _format_row(row, index):
     return "\n".join(lines)
 
 
-def format_alert_message(alert_count, mentions=None):
+def format_alert_message(alert_count, mention_labels=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    mention_items = DEFAULT_MENTIONS if mentions is None else mentions
+    mention_items = DEFAULT_MENTION_LABELS if mention_labels is None else mention_labels
     lines = [
         "🚨 StarRocks PL监控告警",
         "集群: 中国",
-        f"告警原因: PL数据验证不通过 告警记录共: {alert_count} 条（{LATEST_HOUR_COUNT_SQL}这个查询的结果）",
+        f"告警原因: PL数据验证不通过 告警记录共: {alert_count} 条",
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",
         f"查询详情:{REPORT_URL}",
@@ -306,7 +314,7 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
         sr_backup_password=sr_backup_password,
     )
     alert_count = fetch_latest_hour_count(config=config)
-    message = format_alert_message(alert_count=alert_count, mentions=mentions)
+    message = format_alert_message(alert_count=alert_count)
 
     if dry_run:
         print(message)
