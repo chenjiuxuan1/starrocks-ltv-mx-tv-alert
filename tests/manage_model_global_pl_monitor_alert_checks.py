@@ -75,11 +75,10 @@ class FakeConnection:
 
 
 class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
-    def test_default_mentions_use_yu_hongye_email_for_highlight(self):
+    def test_default_mentions_use_email_for_highlight_and_message(self):
         module = load_module()
 
         self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group"])
-        self.assertEqual(module.DEFAULT_MENTION_LABELS, ["余红叶"])
 
     def test_fetch_random_rows_queries_random_one_from_monitor_table_by_default(self):
         module = load_module()
@@ -139,7 +138,8 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertNotIn("这个查询的结果", message)
         self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
         self.assertIn("查询详情:https://data.kuainiu.io/question/12982-pl", message)
-        self.assertIn("@余红叶", message)
+        self.assertIn("@adamyu@kn.group", message)
+        self.assertNotIn("@余红叶", message)
         self.assertNotIn("【告警记录 1】", message)
         self.assertNotIn("• 其他字段:", message)
 
@@ -219,7 +219,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         sent["message"] = send.call_args.args[0]
         sent["mentions"] = send.call_args.kwargs["mentions"]
         self.assertIn("告警记录共: 3 条", sent["message"])
-        self.assertIn("@余红叶", sent["message"])
+        self.assertIn("@adamyu@kn.group", sent["message"])
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
 
 

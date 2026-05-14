@@ -50,14 +50,6 @@ DEFAULT_MENTIONS = [
     ).split(",")
     if item.strip()
 ]
-DEFAULT_MENTION_LABELS = [
-    item.strip()
-    for item in os.environ.get(
-        "MANAGE_MODEL_GLOBAL_PL_TV_MENTION_LABELS",
-        "余红叶",
-    ).split(",")
-    if item.strip()
-]
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
 REPORT_URL = "https://data.kuainiu.io/question/12982-pl"
@@ -245,7 +237,7 @@ def _format_row(row, index):
 
 def format_alert_message(alert_count, mention_labels=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    mention_items = DEFAULT_MENTION_LABELS if mention_labels is None else mention_labels
+    mention_items = DEFAULT_MENTIONS if mention_labels is None else mention_labels
     lines = [
         "🚨 StarRocks PL监控告警",
         "集群: 中国",
