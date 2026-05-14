@@ -154,7 +154,11 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
             return FakeResponse(200, '{"ok":true}')
 
         with mock.patch.object(module.urllib.request, "urlopen", side_effect=fake_urlopen):
-            result = module.send_to_tv("告警内容", mentions=["strongliu@kn.group"])
+            result = module.send_to_tv(
+                "告警内容",
+                mentions=["strongliu@kn.group"],
+                bot_id="4d0bcc9b-71bf-41c5-ba9f-89b7278f9214",
+            )
 
         self.assertTrue(result["success"])
         self.assertEqual(captured["url"], module.TV_API_URL)
@@ -162,7 +166,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertEqual(
             captured["body"],
             {
-                "botId": "f82292a5-45c5-42ea-84da-272b4c81ebcc",
+                "botId": "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214",
                 "message": "告警内容",
                 "mentions": ["strongliu@kn.group"],
             },
@@ -172,12 +176,13 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         module = load_module()
         captured = {}
 
-        def fake_run(limit, dry_run, mentions, sr_password=None, sr_backup_password=None):
+        def fake_run(limit, dry_run, mentions, sr_password=None, sr_backup_password=None, bot_id=None):
             captured["limit"] = limit
             captured["dry_run"] = dry_run
             captured["mentions"] = mentions
             captured["sr_password"] = sr_password
             captured["sr_backup_password"] = sr_backup_password
+            captured["bot_id"] = bot_id
             return {"success": True, "status_code": None, "response": "ok"}
 
         with mock.patch.object(module, "run", side_effect=fake_run):
@@ -189,6 +194,8 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
                     "backup-secret",
                     "--limit",
                     "10",
+                    "--bot-id",
+                    "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214",
                     "--mentions",
                     "strongliu@kn.group,jerrycai@kn.group",
                 ]
@@ -200,6 +207,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertEqual(captured["mentions"], ["strongliu@kn.group", "jerrycai@kn.group"])
         self.assertEqual(captured["sr_password"], "primary-secret")
         self.assertEqual(captured["sr_backup_password"], "backup-secret")
+        self.assertEqual(captured["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
 
     def test_run_sends_latest_hour_count_summary(self):
         module = load_module()
@@ -212,6 +220,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
                         mentions=["adamyu@kn.group"],
                         sr_password="primary-secret",
                         sr_backup_password="backup-secret",
+                        bot_id="4d0bcc9b-71bf-41c5-ba9f-89b7278f9214",
                     )
 
         self.assertTrue(result["success"])
@@ -221,6 +230,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertIn("告警记录共: 3 条", sent["message"])
         self.assertIn("@adamyu@kn.group", sent["message"])
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
+        self.assertEqual(send.call_args.kwargs["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
 
 
 if __name__ == "__main__":

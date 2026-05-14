@@ -300,7 +300,7 @@ def send_to_tv(message, mentions=None, bot_id=None, api_url=None):
         }
 
 
-def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_backup_password=None):
+def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_backup_password=None, bot_id=None):
     config = get_starrocks_config(
         sr_password=sr_password,
         sr_backup_password=sr_backup_password,
@@ -312,7 +312,7 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
         print(message)
         return {"success": True, "status_code": None, "response": "dry_run"}
 
-    result = send_to_tv(message, mentions=mentions)
+    result = send_to_tv(message, mentions=mentions, bot_id=bot_id)
     if result["success"]:
         print(f"✅ TV告警发送成功 (HTTP {result['status_code']})")
     else:
@@ -327,6 +327,7 @@ def parse_args(argv=None):
     parser.add_argument("--dry-run", action="store_true", help="只打印消息，不发送 TV")
     parser.add_argument("--sr-password", default=None, help="StarRocks 主账号密码")
     parser.add_argument("--sr-backup-password", default=None, help="StarRocks 备份账号密码")
+    parser.add_argument("--bot-id", default=None, help="指定发送使用的 TV 机器人 ID")
     parser.add_argument(
         "--mentions",
         default=",".join(DEFAULT_MENTIONS),
@@ -344,6 +345,7 @@ def main(argv=None):
         mentions=mentions,
         sr_password=args.sr_password,
         sr_backup_password=args.sr_backup_password,
+        bot_id=args.bot_id,
     )
     return 0 if result["success"] else 1
 

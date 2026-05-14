@@ -7,7 +7,8 @@
 ```bash
 python3 alert/manage_model_global_pl_monitor_alert.py \
   --sr-password '主账号密码' \
-  --sr-backup-password '备份账号密码'
+  --sr-backup-password '备份账号密码' \
+  --bot-id '4d0bcc9b-71bf-41c5-ba9f-89b7278f9214'
 ```
 
 只预览不发送：
