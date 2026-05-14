@@ -167,7 +167,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
             captured["body"],
             {
                 "botId": "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214",
-                "message": "告警内容",
+                "message": "告警内容\n",
                 "mentions": ["strongliu@kn.group"],
             },
         )
@@ -229,6 +229,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         sent["mentions"] = send.call_args.kwargs["mentions"]
         self.assertIn("告警记录共: 3 条", sent["message"])
         self.assertNotIn("@adamyu@kn.group", sent["message"])
+        self.assertTrue(sent["message"].endswith("\n"))
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
         self.assertEqual(send.call_args.kwargs["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
 

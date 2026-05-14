@@ -251,6 +251,8 @@ def format_alert_message(alert_count, mention_labels=None):
 def send_to_tv(message, mentions=None, bot_id=None, api_url=None):
     if mentions is None:
         mentions = DEFAULT_MENTIONS
+    if not message.endswith("\n"):
+        message = f"{message}\n"
 
     payload = {
         "botId": bot_id or TV_BOT_ID,
@@ -304,6 +306,8 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
     )
     alert_count = fetch_latest_hour_count(config=config)
     message = format_alert_message(alert_count=alert_count)
+    if not message.endswith("\n"):
+        message = f"{message}\n"
 
     if dry_run:
         print(message)
