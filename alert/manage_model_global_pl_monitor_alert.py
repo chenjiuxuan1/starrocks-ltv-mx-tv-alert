@@ -237,7 +237,6 @@ def _format_row(row, index):
 
 def format_alert_message(alert_count, mention_labels=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    mention_items = DEFAULT_MENTIONS if mention_labels is None else mention_labels
     lines = [
         "🚨 StarRocks PL监控告警",
         "集群: 中国",
@@ -246,8 +245,6 @@ def format_alert_message(alert_count, mention_labels=None):
         f"查询表: {MONITOR_TABLE}",
         f"查询详情:{REPORT_URL}",
     ]
-    for item in mention_items:
-        lines.append(f"@{item}")
     return "\n".join(lines)
 
 

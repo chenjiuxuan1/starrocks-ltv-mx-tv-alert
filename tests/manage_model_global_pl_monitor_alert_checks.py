@@ -138,7 +138,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertNotIn("这个查询的结果", message)
         self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
         self.assertIn("查询详情:https://data.kuainiu.io/question/12982-pl", message)
-        self.assertIn("@adamyu@kn.group", message)
+        self.assertNotIn("@adamyu@kn.group", message)
         self.assertNotIn("@余红叶", message)
         self.assertNotIn("【告警记录 1】", message)
         self.assertNotIn("• 其他字段:", message)
@@ -228,7 +228,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         sent["message"] = send.call_args.args[0]
         sent["mentions"] = send.call_args.kwargs["mentions"]
         self.assertIn("告警记录共: 3 条", sent["message"])
-        self.assertIn("@adamyu@kn.group", sent["message"])
+        self.assertNotIn("@adamyu@kn.group", sent["message"])
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
         self.assertEqual(send.call_args.kwargs["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
 
