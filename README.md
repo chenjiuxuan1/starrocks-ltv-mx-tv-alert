@@ -1,6 +1,6 @@
 # StarRocks PL Monitor TV Alert
 
-独立脚本：随机抽取 `fin_global.manage_model_global_pl_monitor` 10 条记录，按告警格式发送到 TV 机器人。
+独立脚本：随机抽取 `fin_global.manage_model_global_pl_monitor` 1 条记录，按告警格式发送到 TV 机器人。
 
 ## 运行
 

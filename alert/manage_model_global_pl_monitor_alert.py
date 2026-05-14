@@ -52,7 +52,8 @@ DEFAULT_MENTIONS = [
 ]
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
-DEFAULT_LIMIT = 10
+REPORT_URL = "https://data.kuainiu.io/question/12982-pl"
+DEFAULT_LIMIT = 1
 
 
 @dataclass
@@ -216,8 +217,8 @@ def format_alert_message(rows):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
         "🚨 StarRocks PL监控告警",
-        f"集群: 中国",
-        f"告警原因: manage_model_global_pl_monitor 随机抽样告警记录: {len(rows)} 条",
+        "集群: 中国",
+        f"告警原因: PL数据验证不通过 随机抽样告警记录: {len(rows)} 条",
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",
     ]
@@ -231,6 +232,8 @@ def format_alert_message(rows):
         lines.append("")
         lines.append(_format_row(row, index))
 
+    lines.append("")
+    lines.append(f"详细告警信息见报表：{REPORT_URL}")
     return "\n".join(lines)
 
 
@@ -306,7 +309,7 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="随机抽取 StarRocks PL 监控记录并发送 TV 告警")
-    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="随机抽样条数，默认 10")
+    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="随机抽样条数，默认 1")
     parser.add_argument("--dry-run", action="store_true", help="只打印消息，不发送 TV")
     parser.add_argument("--sr-password", default=None, help="StarRocks 主账号密码")
     parser.add_argument("--sr-backup-password", default=None, help="StarRocks 备份账号密码")

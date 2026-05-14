@@ -76,7 +76,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
 
         self.assertEqual(module.DEFAULT_MENTIONS, ["余红叶"])
 
-    def test_fetch_random_rows_queries_random_ten_from_monitor_table(self):
+    def test_fetch_random_rows_queries_random_one_from_monitor_table_by_default(self):
         module = load_module()
         fake_conn = FakeConnection([{"query_id": "q1"}])
         config = module.StarRocksConfig(
@@ -90,12 +90,12 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         )
 
         with mock.patch.object(module.pymysql, "connect", return_value=fake_conn) as connect:
-            rows = module.fetch_random_rows(limit=10, config=config)
+            rows = module.fetch_random_rows(config=config)
 
         self.assertEqual(rows, [{"query_id": "q1"}])
         self.assertIn("fin_global.manage_model_global_pl_monitor", fake_conn.cursor_obj.executed_sql)
         self.assertIn("ORDER BY RAND()", fake_conn.cursor_obj.executed_sql)
-        self.assertIn("LIMIT 10", fake_conn.cursor_obj.executed_sql)
+        self.assertTrue(fake_conn.cursor_obj.executed_sql.rstrip().endswith("LIMIT 1"))
         connect.assert_called_once()
         self.assertTrue(fake_conn.closed)
 
@@ -103,14 +103,15 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         module = load_module()
         rows = [
             {
-                "start_time": "2026-05-13 10:00:00",
-                "query_id": "query-001",
-                "conn_id": 123,
-                "db": "dm_tmk",
-                "user": "e_ds_tmk",
-                "scan_bytes": "6.604 GB",
-                "scan_rows": 1624644596,
-                "sql": "select count(*) from t",
+                "current_hour": "2026-05-13 18:00:00",
+                "monitor_rule_name": "a06_运营成本(分摊前后_所有国家合计)",
+                "country": "all",
+                "currency_type": "美元",
+                "stat_type": "放款口径",
+                "stat_date": "2023-08",
+                "src_value": 3450647,
+                "dest_value": 3450647,
+                "diff": 0,
             }
         ]
 
@@ -118,11 +119,19 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
 
         self.assertIn("🚨 StarRocks PL监控告警", message)
         self.assertIn("集群: 中国", message)
+        self.assertIn("告警原因: PL数据验证不通过 随机抽样告警记录: 1 条", message)
         self.assertIn("随机抽样告警记录: 1 条", message)
-        self.assertIn("开始时间: 2026-05-13 10:00:00", message)
-        self.assertIn("查询ID: query-001", message)
-        self.assertIn("扫描行数: 1624644596", message)
-        self.assertIn("SQL: select count(*) from t", message)
+        self.assertIn("• 其他字段:", message)
+        self.assertIn("- current_hour: 2026-05-13 18:00:00", message)
+        self.assertIn("- monitor_rule_name: a06_运营成本(分摊前后_所有国家合计)", message)
+        self.assertIn("- country: all", message)
+        self.assertIn("- currency_type: 美元", message)
+        self.assertIn("- stat_type: 放款口径", message)
+        self.assertIn("- stat_date: 2023-08", message)
+        self.assertIn("- src_value: 3450647", message)
+        self.assertIn("- dest_value: 3450647", message)
+        self.assertIn("- diff: 0", message)
+        self.assertIn("详细告警信息见报表：https://data.kuainiu.io/question/12982-pl", message)
 
     def test_send_to_tv_uses_requested_bot_and_mentions_field(self):
         module = load_module()
