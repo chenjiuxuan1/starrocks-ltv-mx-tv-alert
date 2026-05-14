@@ -53,6 +53,10 @@ DEFAULT_MENTIONS = [
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
 REPORT_URL = "https://data.kuainiu.io/question/12982-pl"
+LATEST_HOUR_COUNT_SQL = (
+    f"select count(1) as alert_count from {MONITOR_TABLE} "
+    f"where current_hour = (select max(current_hour) from {MONITOR_TABLE})"
+)
 DEFAULT_LIMIT = 1
 
 
@@ -142,6 +146,24 @@ def fetch_random_rows(limit=DEFAULT_LIMIT, config=None, sr_password=None, sr_bac
         conn.close()
 
 
+def fetch_latest_hour_count(config=None, sr_password=None, sr_backup_password=None):
+    if config is None:
+        config = get_starrocks_config(
+            sr_password=sr_password,
+            sr_backup_password=sr_backup_password,
+        )
+    conn = get_connection(config=config)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(LATEST_HOUR_COUNT_SQL)
+        row = cursor.fetchone() or {}
+        if isinstance(row, dict):
+            return int(row.get("alert_count") or row.get("count(1)") or 0)
+        return int(row[0] or 0)
+    finally:
+        conn.close()
+
+
 def _stringify(value):
     if value is None:
         return ""
@@ -213,27 +235,19 @@ def _format_row(row, index):
     return "\n".join(lines)
 
 
-def format_alert_message(rows):
+def format_alert_message(alert_count, mentions=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    mention_items = DEFAULT_MENTIONS if mentions is None else mentions
     lines = [
         "🚨 StarRocks PL监控告警",
         "集群: 中国",
-        f"告警原因: PL数据验证不通过 随机抽样告警记录: {len(rows)} 条",
+        f"告警原因: PL数据验证不通过 告警记录共: {alert_count} 条（{LATEST_HOUR_COUNT_SQL}这个查询的结果）",
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",
+        f"查询详情:{REPORT_URL}",
     ]
-
-    if not rows:
-        lines.append("查询结果: 未查询到记录")
-        return "\n".join(lines)
-
-    lines.append("查询详情:")
-    for index, row in enumerate(rows, 1):
-        lines.append("")
-        lines.append(_format_row(row, index))
-
-    lines.append("")
-    lines.append(f"详细告警信息见报表：{REPORT_URL}")
+    for item in mention_items:
+        lines.append(f"@{item}")
     return "\n".join(lines)
 
 
@@ -287,12 +301,12 @@ def send_to_tv(message, mentions=None, bot_id=None, api_url=None):
 
 
 def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_backup_password=None):
-    rows = fetch_random_rows(
-        limit=limit,
+    config = get_starrocks_config(
         sr_password=sr_password,
         sr_backup_password=sr_backup_password,
     )
-    message = format_alert_message(rows)
+    alert_count = fetch_latest_hour_count(config=config)
+    message = format_alert_message(alert_count=alert_count, mentions=mentions)
 
     if dry_run:
         print(message)

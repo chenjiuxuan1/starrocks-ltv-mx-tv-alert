@@ -47,20 +47,24 @@ class FakeResponse:
 
 
 class FakeCursor:
-    def __init__(self, rows):
-        self.rows = rows
-        self.executed_sql = None
+    def __init__(self, rows=None, one=None):
+        self.rows = rows or []
+        self.one = one
+        self.executed_sqls = []
 
     def execute(self, sql):
-        self.executed_sql = sql
+        self.executed_sqls.append(sql)
 
     def fetchall(self):
         return self.rows
 
+    def fetchone(self):
+        return self.one
+
 
 class FakeConnection:
-    def __init__(self, rows):
-        self.cursor_obj = FakeCursor(rows)
+    def __init__(self, rows=None, one=None):
+        self.cursor_obj = FakeCursor(rows=rows, one=one)
         self.closed = False
 
     def cursor(self):
@@ -93,45 +97,48 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
             rows = module.fetch_random_rows(config=config)
 
         self.assertEqual(rows, [{"query_id": "q1"}])
-        self.assertIn("fin_global.manage_model_global_pl_monitor", fake_conn.cursor_obj.executed_sql)
-        self.assertIn("ORDER BY RAND()", fake_conn.cursor_obj.executed_sql)
-        self.assertTrue(fake_conn.cursor_obj.executed_sql.rstrip().endswith("LIMIT 1"))
+        executed_sql = fake_conn.cursor_obj.executed_sqls[0]
+        self.assertIn("fin_global.manage_model_global_pl_monitor", executed_sql)
+        self.assertIn("ORDER BY RAND()", executed_sql)
+        self.assertTrue(executed_sql.rstrip().endswith("LIMIT 1"))
         connect.assert_called_once()
         self.assertTrue(fake_conn.closed)
 
-    def test_format_alert_message_includes_rows_as_alarm_details(self):
+    def test_fetch_latest_hour_count_counts_latest_monitor_hour(self):
         module = load_module()
-        rows = [
-            {
-                "current_hour": "2026-05-13 18:00:00",
-                "monitor_rule_name": "a06_运营成本(分摊前后_所有国家合计)",
-                "country": "all",
-                "currency_type": "美元",
-                "stat_type": "放款口径",
-                "stat_date": "2023-08",
-                "src_value": 3450647,
-                "dest_value": 3450647,
-                "diff": 0,
-            }
-        ]
+        fake_conn = FakeConnection(one={"alert_count": 7})
+        config = module.StarRocksConfig(
+            host="sr.example.com",
+            port=9031,
+            fe_host="sr.example.com",
+            fe_port=8031,
+            db="ods",
+            primary=module.StarRocksAccount(username="e_load", password="secret"),
+            backup=module.StarRocksAccount(username="e_backup", password="backup-secret"),
+        )
 
-        message = module.format_alert_message(rows)
+        with mock.patch.object(module.pymysql, "connect", return_value=fake_conn):
+            count = module.fetch_latest_hour_count(config=config)
+
+        self.assertEqual(count, 7)
+        executed_sql = fake_conn.cursor_obj.executed_sqls[0]
+        self.assertIn("select count(1)", executed_sql.lower())
+        self.assertIn("current_hour = (select max(current_hour)", executed_sql.lower())
+        self.assertTrue(fake_conn.closed)
+
+    def test_format_alert_message_matches_summary_style(self):
+        module = load_module()
+
+        message = module.format_alert_message(alert_count=1)
 
         self.assertIn("🚨 StarRocks PL监控告警", message)
         self.assertIn("集群: 中国", message)
-        self.assertIn("告警原因: PL数据验证不通过 随机抽样告警记录: 1 条", message)
-        self.assertIn("随机抽样告警记录: 1 条", message)
-        self.assertIn("• 其他字段:", message)
-        self.assertIn("- current_hour: 2026-05-13 18:00:00", message)
-        self.assertIn("- monitor_rule_name: a06_运营成本(分摊前后_所有国家合计)", message)
-        self.assertIn("- country: all", message)
-        self.assertIn("- currency_type: 美元", message)
-        self.assertIn("- stat_type: 放款口径", message)
-        self.assertIn("- stat_date: 2023-08", message)
-        self.assertIn("- src_value: 3450647", message)
-        self.assertIn("- dest_value: 3450647", message)
-        self.assertIn("- diff: 0", message)
-        self.assertIn("详细告警信息见报表：https://data.kuainiu.io/question/12982-pl", message)
+        self.assertIn("告警原因: PL数据验证不通过 告警记录共: 1 条", message)
+        self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
+        self.assertIn("查询详情:https://data.kuainiu.io/question/12982-pl", message)
+        self.assertIn("@余红叶", message)
+        self.assertNotIn("【告警记录 1】", message)
+        self.assertNotIn("• 其他字段:", message)
 
     def test_send_to_tv_uses_requested_bot_and_mentions_field(self):
         module = load_module()
@@ -190,6 +197,27 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertEqual(captured["mentions"], ["strongliu@kn.group", "jerrycai@kn.group"])
         self.assertEqual(captured["sr_password"], "primary-secret")
         self.assertEqual(captured["sr_backup_password"], "backup-secret")
+
+    def test_run_sends_latest_hour_count_summary(self):
+        module = load_module()
+        sent = {}
+
+        with mock.patch.object(module, "fetch_latest_hour_count", return_value=3) as fetch_count:
+            with mock.patch.object(module, "send_to_tv", return_value={"success": True, "status_code": 200, "response": "ok"}) as send:
+                with mock.patch("builtins.print"):
+                    result = module.run(
+                        mentions=["余红叶"],
+                        sr_password="primary-secret",
+                        sr_backup_password="backup-secret",
+                    )
+
+        self.assertTrue(result["success"])
+        fetch_count.assert_called_once()
+        sent["message"] = send.call_args.args[0]
+        sent["mentions"] = send.call_args.kwargs["mentions"]
+        self.assertIn("告警记录共: 3 条", sent["message"])
+        self.assertIn("@余红叶", sent["message"])
+        self.assertEqual(sent["mentions"], ["余红叶"])
 
 
 if __name__ == "__main__":
