@@ -1,6 +1,6 @@
 # StarRocks PL Monitor TV Alert
 
-独立脚本：统计 `fin_global.manage_model_global_pl_monitor` 最新 `current_hour` 的告警记录数，按摘要告警格式发送到 TV 机器人。
+独立脚本：统计 `fin_global.manage_model_global_pl_monitor` 最新 `etl_create_time` 批次的总记录数和 `diff <> 0` 异常记录数，按摘要告警格式发送到 TV 机器人。
 
 ## 运行
 

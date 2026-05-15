@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-随机抽取 StarRocks PL 监控记录并发送 TV 告警。
+统计 StarRocks PL 监控最新批次记录数并发送 TV 告警。
 
 默认查询:
-    select * from fin_global.manage_model_global_pl_monitor order by rand() limit 10
+    select count(1) from fin_global.manage_model_global_pl_monitor
+    where etl_create_time = (
+        select max(etl_create_time) from fin_global.manage_model_global_pl_monitor
+    )
 
 真实密码请通过环境变量传入:
     SR_PASSWORD=... python3 alert/manage_model_global_pl_monitor_alert.py
@@ -56,6 +59,15 @@ REPORT_URL = "https://data.kuainiu.io/question/12982-pl"
 LATEST_HOUR_COUNT_SQL = (
     f"select count(1) as alert_count from {MONITOR_TABLE} "
     f"where current_hour = (select max(current_hour) from {MONITOR_TABLE})"
+)
+LATEST_BATCH_TOTAL_COUNT_SQL = (
+    f"select count(1) as alert_count from {MONITOR_TABLE} "
+    f"where etl_create_time = (select max(etl_create_time) from {MONITOR_TABLE})"
+)
+LATEST_BATCH_EXCEPTION_COUNT_SQL = (
+    f"select count(1) as alert_count from {MONITOR_TABLE} "
+    f"where etl_create_time = (select max(etl_create_time) from {MONITOR_TABLE}) "
+    "and diff <> 0"
 )
 DEFAULT_LIMIT = 1
 
@@ -164,6 +176,34 @@ def fetch_latest_hour_count(config=None, sr_password=None, sr_backup_password=No
         conn.close()
 
 
+def _count_from_row(row):
+    row = row or {}
+    if isinstance(row, dict):
+        return int(row.get("alert_count") or row.get("count(1)") or 0)
+    return int(row[0] or 0)
+
+
+def fetch_latest_batch_counts(config=None, sr_password=None, sr_backup_password=None):
+    if config is None:
+        config = get_starrocks_config(
+            sr_password=sr_password,
+            sr_backup_password=sr_backup_password,
+        )
+    conn = get_connection(config=config)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(LATEST_BATCH_TOTAL_COUNT_SQL)
+        alert_count = _count_from_row(cursor.fetchone())
+        cursor.execute(LATEST_BATCH_EXCEPTION_COUNT_SQL)
+        exception_count = _count_from_row(cursor.fetchone())
+        return {
+            "alert_count": alert_count,
+            "exception_count": exception_count,
+        }
+    finally:
+        conn.close()
+
+
 def _stringify(value):
     if value is None:
         return ""
@@ -235,12 +275,12 @@ def _format_row(row, index):
     return "\n".join(lines)
 
 
-def format_alert_message(alert_count, mention_labels=None):
+def format_alert_message(alert_count, exception_count, mention_labels=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
         "🚨 StarRocks PL监控告警",
         "集群: 中国",
-        f"告警原因: PL数据验证不通过 告警记录共: {alert_count} 条",
+        f"告警记录: {alert_count} 条，异常告警：{exception_count}条，",
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",
         f"查询详情:{REPORT_URL}",
@@ -304,8 +344,11 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
         sr_password=sr_password,
         sr_backup_password=sr_backup_password,
     )
-    alert_count = fetch_latest_hour_count(config=config)
-    message = format_alert_message(alert_count=alert_count)
+    counts = fetch_latest_batch_counts(config=config)
+    message = format_alert_message(
+        alert_count=counts["alert_count"],
+        exception_count=counts["exception_count"],
+    )
     if not message.endswith("\n"):
         message = f"{message}\n"
 
@@ -323,8 +366,8 @@ def run(limit=DEFAULT_LIMIT, dry_run=False, mentions=None, sr_password=None, sr_
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="随机抽取 StarRocks PL 监控记录并发送 TV 告警")
-    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="随机抽样条数，默认 1")
+    parser = argparse.ArgumentParser(description="统计 StarRocks PL 监控最新批次记录数并发送 TV 告警")
+    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="兼容旧参数，当前告警不使用")
     parser.add_argument("--dry-run", action="store_true", help="只打印消息，不发送 TV")
     parser.add_argument("--sr-password", default=None, help="StarRocks 主账号密码")
     parser.add_argument("--sr-backup-password", default=None, help="StarRocks 备份账号密码")

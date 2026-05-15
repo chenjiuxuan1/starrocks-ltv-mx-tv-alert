@@ -50,6 +50,7 @@ class FakeCursor:
     def __init__(self, rows=None, one=None):
         self.rows = rows or []
         self.one = one
+        self.fetchone_index = 0
         self.executed_sqls = []
 
     def execute(self, sql):
@@ -59,6 +60,10 @@ class FakeCursor:
         return self.rows
 
     def fetchone(self):
+        if self.one is None and self.fetchone_index < len(self.rows):
+            row = self.rows[self.fetchone_index]
+            self.fetchone_index += 1
+            return row
         return self.one
 
 
@@ -104,9 +109,9 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         connect.assert_called_once()
         self.assertTrue(fake_conn.closed)
 
-    def test_fetch_latest_hour_count_counts_latest_monitor_hour(self):
+    def test_fetch_latest_batch_counts_counts_latest_etl_create_time(self):
         module = load_module()
-        fake_conn = FakeConnection(one={"alert_count": 7})
+        fake_conn = FakeConnection(rows=[{"alert_count": 22227}, {"alert_count": 1000}])
         config = module.StarRocksConfig(
             host="sr.example.com",
             port=9031,
@@ -118,22 +123,28 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         )
 
         with mock.patch.object(module.pymysql, "connect", return_value=fake_conn):
-            count = module.fetch_latest_hour_count(config=config)
+            counts = module.fetch_latest_batch_counts(config=config)
 
-        self.assertEqual(count, 7)
-        executed_sql = fake_conn.cursor_obj.executed_sqls[0]
-        self.assertIn("select count(1)", executed_sql.lower())
-        self.assertIn("current_hour = (select max(current_hour)", executed_sql.lower())
+        self.assertEqual(counts, {"alert_count": 22227, "exception_count": 1000})
+        self.assertEqual(len(fake_conn.cursor_obj.executed_sqls), 2)
+        total_sql = fake_conn.cursor_obj.executed_sqls[0].lower()
+        exception_sql = fake_conn.cursor_obj.executed_sqls[1].lower()
+        self.assertIn("select count(1)", total_sql)
+        self.assertIn("etl_create_time = (select max(etl_create_time)", total_sql)
+        self.assertIn("select count(1)", exception_sql)
+        self.assertIn("etl_create_time = (select max(etl_create_time)", exception_sql)
+        self.assertIn("diff <> 0", exception_sql)
         self.assertTrue(fake_conn.closed)
 
     def test_format_alert_message_matches_summary_style(self):
         module = load_module()
 
-        message = module.format_alert_message(alert_count=1)
+        message = module.format_alert_message(alert_count=22227, exception_count=1000)
 
         self.assertIn("🚨 StarRocks PL监控告警", message)
         self.assertIn("集群: 中国", message)
-        self.assertIn("告警原因: PL数据验证不通过 告警记录共: 1 条", message)
+        self.assertIn("告警记录: 22227 条，异常告警：1000条，", message)
+        self.assertNotIn("告警原因", message)
         self.assertNotIn("select count(1)", message)
         self.assertNotIn("这个查询的结果", message)
         self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
@@ -209,11 +220,15 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertEqual(captured["sr_backup_password"], "backup-secret")
         self.assertEqual(captured["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
 
-    def test_run_sends_latest_hour_count_summary(self):
+    def test_run_sends_latest_batch_counts_summary_even_when_exception_count_is_zero(self):
         module = load_module()
         sent = {}
 
-        with mock.patch.object(module, "fetch_latest_hour_count", return_value=3) as fetch_count:
+        with mock.patch.object(
+            module,
+            "fetch_latest_batch_counts",
+            return_value={"alert_count": 3, "exception_count": 0},
+        ) as fetch_count:
             with mock.patch.object(module, "send_to_tv", return_value={"success": True, "status_code": 200, "response": "ok"}) as send:
                 with mock.patch("builtins.print"):
                     result = module.run(
@@ -227,7 +242,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         fetch_count.assert_called_once()
         sent["message"] = send.call_args.args[0]
         sent["mentions"] = send.call_args.kwargs["mentions"]
-        self.assertIn("告警记录共: 3 条", sent["message"])
+        self.assertIn("告警记录: 3 条，异常告警：0条，", sent["message"])
         self.assertNotIn("@adamyu@kn.group", sent["message"])
         self.assertTrue(sent["message"].endswith("\n"))
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
