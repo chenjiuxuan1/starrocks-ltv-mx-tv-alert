@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-03-26T19:23:31.249071",
+  "mode": "test",
+  "results": [
+    {
+      "alert_id": 4437,
+      "table": "dwd_asset_account_repay",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "工作流_dwd_asset_account_repay",
+      "task_code": "158514956981265",
+      "task_name": "任务_dwd_asset_account_repay",
+      "status": "success",
+      "instance_id": "test_instance_1"
+    },
+    {
+      "alert_id": 4436,
+      "table": "dwb_asset_period_info",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "工作流_dwb_asset_period_info",
+      "task_code": "158514956981265",
+      "task_name": "任务_dwb_asset_period_info",
+      "status": "success",
+      "instance_id": "test_instance_2"
+    }
+  ],
+  "fuyan_results": [
+    {
+      "name": "每日复验全级别数据(W-1)",
+      "id": "test_fuyan_1",
+      "status": "success"
+    },
+    {
+      "name": "两小时复验3级表数据(D-1)",
+      "id": "test_fuyan_2",
+      "status": "success"
+    }
+  ],
+  "fixed_count": 2,
+  "failed_count": 0
+}

@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-03-26T18:28:36.261942",
+  "results": [
+    {
+      "alert_id": 224455,
+      "table": "ods_fox_asset_period_recovery",
+      "dt": "2026-03-25",
+      "level": "P1",
+      "workflow_name": "\u672a\u77e5",
+      "workflow_code": "",
+      "task_name": "",
+      "task_code": "",
+      "status": "success",
+      "instance_id": "fake_instance_id"
+    },
+    {
+      "alert_id": 224428,
+      "table": "ods_qsq_erp_reimbursing_order_detail",
+      "dt": "2026-03-25",
+      "level": "P1",
+      "workflow_name": "\u672a\u77e5",
+      "workflow_code": "",
+      "task_name": "",
+      "task_code": "",
+      "status": "success",
+      "instance_id": "fake_instance_id"
+    },
+    {
+      "alert_id": 224422,
+      "table": "ods_qsq_erp_account_repay",
+      "dt": "2026-03-25",
+      "level": "P1",
+      "workflow_name": "\u672a\u77e5",
+      "workflow_code": "",
+      "task_name": "",
+      "task_code": "",
+      "status": "success",
+      "instance_id": "fake_instance_id"
+    },
+    {
+      "alert_id": 224404,
+      "table": "ods_capital_clean_clearing_trans",
+      "dt": "2026-03-25",
+      "level": "P1",
+      "workflow_name": "\u672a\u77e5",
+      "workflow_code": "",
+      "task_name": "",
+      "task_code": "",
+      "status": "success",
+      "instance_id": "fake_instance_id"
+    }
+  ],
+  "fuyan_results": [
+    {
+      "name": "\u6bcf\u65e5\u590d\u9a8c\u5168\u7ea7\u522b\u6570\u636e(W-1)",
+      "status": "success"
+    },
+    {
+      "name": "\u4e24\u5c0f\u65f6\u590d\u9a8c3\u7ea7\u8868\u6570\u636e(D-1)",
+      "status": "success"
+    }
+  ]
+}

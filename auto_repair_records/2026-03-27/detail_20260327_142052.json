@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-03-27T14:20:52.851694",
+  "results": [
+    {
+      "alert_id": 226371,
+      "table": "dwd_capital_compensate_advance",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "",
+      "task_code": 158514956981275,
+      "task_name": "dwd_capital_compensate_advance",
+      "status": "success",
+      "instance_id": 549576,
+      "final_status": "success",
+      "end_time": "2026-03-27 14:20:07"
+    },
+    {
+      "alert_id": 226373,
+      "table": "dwd_asset_account_repay",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "",
+      "task_code": 158514956981265,
+      "task_name": "dwd_asset_account_repay",
+      "status": "success",
+      "instance_id": 549577,
+      "final_status": "success",
+      "end_time": "2026-03-27 14:20:45"
+    },
+    {
+      "alert_id": 225988,
+      "table": "dwd_fox_asset_period_recovery",
+      "dt": "2026-03-19",
+      "workflow_code": "",
+      "workflow_name": "未找到",
+      "task_code": "",
+      "task_name": "",
+      "status": "skipped_no_workflow"
+    }
+  ],
+  "completed_tasks": [
+    {
+      "alert_id": 226371,
+      "table": "dwd_capital_compensate_advance",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "",
+      "task_code": 158514956981275,
+      "task_name": "dwd_capital_compensate_advance",
+      "status": "success",
+      "instance_id": 549576,
+      "final_status": "success",
+      "end_time": "2026-03-27 14:20:07"
+    },
+    {
+      "alert_id": 226373,
+      "table": "dwd_asset_account_repay",
+      "dt": "2026-03-26",
+      "workflow_code": "158514956979200",
+      "workflow_name": "",
+      "task_code": 158514956981265,
+      "task_name": "dwd_asset_account_repay",
+      "status": "success",
+      "instance_id": 549577,
+      "final_status": "success",
+      "end_time": "2026-03-27 14:20:45"
+    }
+  ],
+  "failed_tasks": [],
+  "fuyan_results": [
+    {
+      "name": "每日复验全级别数据(W-1)",
+      "id": 549591,
+      "status": "success"
+    },
+    {
+      "name": "两小时复验3级表数据(D-1)",
+      "id": 549592,
+      "status": "success"
+    }
+  ]
+}
