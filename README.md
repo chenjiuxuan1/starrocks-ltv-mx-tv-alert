@@ -8,7 +8,8 @@
 python3 alert/manage_model_global_pl_monitor_alert.py \
   --sr-password '主账号密码' \
   --sr-backup-password '备份账号密码' \
-  --bot-id '4d0bcc9b-71bf-41c5-ba9f-89b7278f9214'
+  --bot-id '4d0bcc9b-71bf-41c5-ba9f-89b7278f9214' \
+  --mentions 'adamyu@kn.group,gretchenhe@kn.group'
 ```
 
 只预览不发送：
@@ -29,6 +30,6 @@ python3 alert/manage_model_global_pl_monitor_alert.py \
 - 主账号: `e_load`
 - 备份账号: `e_backup`
 - TV Bot: `f82292a5-45c5-42ea-84da-272b4c81ebcc`
-- 默认 @ 人: `adamyu@kn.group`
+- 默认 @ 人: `adamyu@kn.group,gretchenhe@kn.group`
 
-可通过环境变量覆盖：`SR_HOST`、`SR_PORT`、`SR_DB`、`SR_USERNAME`、`SR_BACKUP_USERNAME`、`TV_API_URL`、`MANAGE_MODEL_GLOBAL_PL_TV_BOT_ID`、`MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS`。
+可通过命令行参数覆盖默认值，例如任务传参 `--mentions 'owner@kn.group,backup@kn.group'`。也可通过环境变量覆盖：`SR_HOST`、`SR_PORT`、`SR_DB`、`SR_USERNAME`、`SR_BACKUP_USERNAME`、`TV_API_URL`、`MANAGE_MODEL_GLOBAL_PL_TV_BOT_ID`、`MANAGE_MODEL_GLOBAL_PL_TV_MENTIONS`。

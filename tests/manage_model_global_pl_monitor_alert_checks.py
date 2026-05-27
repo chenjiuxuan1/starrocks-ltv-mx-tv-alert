@@ -83,7 +83,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
     def test_default_mentions_use_email_for_highlight_and_message(self):
         module = load_module()
 
-        self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group"])
+        self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group", "gretchenhe@kn.group"])
 
     def test_fetch_random_rows_queries_random_one_from_monitor_table_by_default(self):
         module = load_module()
@@ -219,6 +219,20 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertEqual(captured["sr_password"], "primary-secret")
         self.assertEqual(captured["sr_backup_password"], "backup-secret")
         self.assertEqual(captured["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")
+
+    def test_main_mentions_argument_replaces_default_mentions(self):
+        module = load_module()
+        captured = {}
+
+        def fake_run(limit, dry_run, mentions, sr_password=None, sr_backup_password=None, bot_id=None):
+            captured["mentions"] = mentions
+            return {"success": True, "status_code": None, "response": "ok"}
+
+        with mock.patch.object(module, "run", side_effect=fake_run):
+            exit_code = module.main(["--mentions", "owner@kn.group"])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(captured["mentions"], ["owner@kn.group"])
 
     def test_run_sends_latest_batch_counts_summary_even_when_exception_count_is_zero(self):
         module = load_module()
