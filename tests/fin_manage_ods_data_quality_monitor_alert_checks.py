@@ -83,7 +83,7 @@ class FinManageOdsDataQualityMonitorAlertTests(unittest.TestCase):
     def test_default_mentions_use_email_for_highlight_and_message(self):
         module = load_module()
 
-        self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group", "strongliu@kn.group"])
+        self.assertEqual(module.DEFAULT_MENTIONS, ["adamyu@kn.group", "gretchenhe@kn.group"])
 
     def test_fetch_random_rows_queries_random_one_from_monitor_table_by_default(self):
         module = load_module()
@@ -148,9 +148,10 @@ class FinManageOdsDataQualityMonitorAlertTests(unittest.TestCase):
         self.assertIn("集群: 中国", message)
         self.assertIn("告警记录: 172326 条，异常告警：834条，", message)
         self.assertIn("查询表: fin.fin_manage_ods_data_quality_monitor", message)
-        self.assertIn("@Adam Yu (余红叶) @柳琴", message)
         self.assertNotIn("select count(1)", message)
         self.assertNotIn("这个sql查询结果", message)
+        self.assertNotIn("@Adam Yu", message)
+        self.assertNotIn("@柳琴", message)
 
     def test_send_to_tv_uses_requested_bot_and_mentions_field(self):
         module = load_module()
@@ -204,7 +205,8 @@ class FinManageOdsDataQualityMonitorAlertTests(unittest.TestCase):
         sent["message"] = send.call_args.args[0]
         sent["mentions"] = send.call_args.kwargs["mentions"]
         self.assertIn("告警记录: 3 条，异常告警：0条，", sent["message"])
-        self.assertIn("@Adam Yu (余红叶) @柳琴", sent["message"])
+        self.assertNotIn("@Adam Yu", sent["message"])
+        self.assertNotIn("@柳琴", sent["message"])
         self.assertTrue(sent["message"].endswith("\n"))
         self.assertEqual(sent["mentions"], ["adamyu@kn.group"])
         self.assertEqual(send.call_args.kwargs["bot_id"], "4d0bcc9b-71bf-41c5-ba9f-89b7278f9214")

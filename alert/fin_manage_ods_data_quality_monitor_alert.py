@@ -47,14 +47,10 @@ DEFAULT_MENTIONS = [
     item.strip()
     for item in os.environ.get(
         "FIN_MANAGE_ODS_DATA_QUALITY_TV_MENTIONS",
-        "adamyu@kn.group,strongliu@kn.group",
+        "adamyu@kn.group,gretchenhe@kn.group",
     ).split(",")
     if item.strip()
 ]
-MENTION_LABELS = os.environ.get(
-    "FIN_MANAGE_ODS_DATA_QUALITY_TV_MENTION_LABELS",
-    "@Adam Yu (余红叶) @柳琴",
-).strip()
 
 MONITOR_TABLE = "fin.fin_manage_ods_data_quality_monitor"
 LATEST_BATCH_TOTAL_COUNT_SQL = f"select count(1) as alert_count from {MONITOR_TABLE}"
@@ -187,9 +183,6 @@ def format_alert_message(alert_count, exception_count, mention_labels=None):
         f"告警时间: {now}",
         f"查询表: {MONITOR_TABLE}",
     ]
-    labels = MENTION_LABELS if mention_labels is None else mention_labels
-    if labels:
-        lines.append(labels)
     return "\n".join(lines)
 
 
