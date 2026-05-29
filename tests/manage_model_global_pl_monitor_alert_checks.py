@@ -148,7 +148,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertNotIn("select count(1)", message)
         self.assertNotIn("这个查询的结果", message)
         self.assertIn("查询表: fin_global.manage_model_global_pl_monitor", message)
-        self.assertIn("查询详情:https://data.kuainiu.io/question/12982-pl", message)
+        self.assertIn("查询详情:https://data.kuainiu.io/collection/2632-pl", message)
         self.assertNotIn("@adamyu@kn.group", message)
         self.assertNotIn("@余红叶", message)
         self.assertNotIn("【告警记录 1】", message)

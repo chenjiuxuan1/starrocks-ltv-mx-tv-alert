@@ -55,7 +55,7 @@ DEFAULT_MENTIONS = [
 ]
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
-REPORT_URL = "https://data.kuainiu.io/question/12982-pl"
+REPORT_URL = "https://data.kuainiu.io/collection/2632-pl"
 LATEST_HOUR_COUNT_SQL = (
     f"select count(1) as alert_count from {MONITOR_TABLE} "
     f"where current_hour = (select max(current_hour) from {MONITOR_TABLE})"
