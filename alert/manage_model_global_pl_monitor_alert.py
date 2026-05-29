@@ -67,7 +67,7 @@ LATEST_BATCH_TOTAL_COUNT_SQL = (
 LATEST_BATCH_EXCEPTION_COUNT_SQL = (
     f"select count(1) as alert_count from {MONITOR_TABLE} "
     f"where etl_create_time = (select max(etl_create_time) from {MONITOR_TABLE}) "
-    "and diff <> 0"
+    "and abs(diff) > 1"
 )
 DEFAULT_LIMIT = 1
 

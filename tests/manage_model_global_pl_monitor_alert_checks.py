@@ -133,7 +133,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertIn("etl_create_time = (select max(etl_create_time)", total_sql)
         self.assertIn("select count(1)", exception_sql)
         self.assertIn("etl_create_time = (select max(etl_create_time)", exception_sql)
-        self.assertIn("diff <> 0", exception_sql)
+        self.assertIn("abs(diff) > 1", exception_sql)
         self.assertTrue(fake_conn.closed)
 
     def test_format_alert_message_matches_summary_style(self):
