@@ -4,8 +4,8 @@
 统计 StarRocks 数仓与财务库数据一致性校验表记录数并发送 TV 告警。
 
 默认查询:
-    select count(1) from fin.fin_manage_ods_data_quality_monitor
-    select count(1) from fin.fin_manage_ods_data_quality_monitor where diff <> 0
+    select count(1) from fin.fin_manage_ods_data_quality_monitor where dt = (select max(dt) from fin.fin_manage_ods_data_quality_monitor)
+    select count(1) from fin.fin_manage_ods_data_quality_monitor where dt = (select max(dt) from fin.fin_manage_ods_data_quality_monitor) and diff <> 0
 
 真实密码请通过环境变量传入:
     SR_PASSWORD=... python3 alert/fin_manage_ods_data_quality_monitor_alert.py
@@ -53,9 +53,13 @@ DEFAULT_MENTIONS = [
 ]
 
 MONITOR_TABLE = "fin.fin_manage_ods_data_quality_monitor"
-LATEST_BATCH_TOTAL_COUNT_SQL = f"select count(1) as alert_count from {MONITOR_TABLE}"
+LATEST_BATCH_TOTAL_COUNT_SQL = (
+    f"select count(1) as alert_count from {MONITOR_TABLE} "
+    f"where dt = (select max(dt) from {MONITOR_TABLE})"
+)
 LATEST_BATCH_EXCEPTION_COUNT_SQL = (
-    f"select count(1) as alert_count from {MONITOR_TABLE} where diff <> 0"
+    f"select count(1) as alert_count from {MONITOR_TABLE} "
+    f"where dt = (select max(dt) from {MONITOR_TABLE}) and diff <> 0"
 )
 DEFAULT_LIMIT = 1
 

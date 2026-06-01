@@ -131,11 +131,11 @@ class FinManageOdsDataQualityMonitorAlertTests(unittest.TestCase):
         exception_sql = fake_conn.cursor_obj.executed_sqls[1].lower()
         self.assertEqual(
             total_sql.strip(),
-            "select count(1) as alert_count from fin.fin_manage_ods_data_quality_monitor",
+            "select count(1) as alert_count from fin.fin_manage_ods_data_quality_monitor where dt = (select max(dt) from fin.fin_manage_ods_data_quality_monitor)",
         )
         self.assertEqual(
             exception_sql.strip(),
-            "select count(1) as alert_count from fin.fin_manage_ods_data_quality_monitor where diff <> 0",
+            "select count(1) as alert_count from fin.fin_manage_ods_data_quality_monitor where dt = (select max(dt) from fin.fin_manage_ods_data_quality_monitor) and diff <> 0",
         )
         self.assertTrue(fake_conn.closed)
 
