@@ -55,7 +55,8 @@ DEFAULT_MENTIONS = [
 ]
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
-REPORT_URL = "https://data.kuainiu.io/collection/2632-pl"
+CONSISTENCY_MONITOR_URL = "https://data.kuainiu.io/collection/2632-pl"
+VOLATILITY_MONITOR_URL = "https://data.kuainiu.io/question/13519-v2"
 LATEST_HOUR_COUNT_SQL = (
     f"select count(1) as alert_count from {MONITOR_TABLE} "
     f"where current_hour = (select max(current_hour) from {MONITOR_TABLE})"
@@ -282,8 +283,8 @@ def format_alert_message(alert_count, exception_count, mention_labels=None):
         "集群: 中国",
         f"告警记录: {alert_count} 条，异常告警：{exception_count}条，",
         f"告警时间: {now}",
-        f"查询表: {MONITOR_TABLE}",
-        f"查询详情:{REPORT_URL}",
+        f"数据一致性监控:{CONSISTENCY_MONITOR_URL}",
+        f"数据波动监控:{VOLATILITY_MONITOR_URL}",
     ]
     return "\n".join(lines)
 
