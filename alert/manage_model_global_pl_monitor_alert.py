@@ -56,7 +56,7 @@ DEFAULT_MENTIONS = [
 
 MONITOR_TABLE = "fin_global.manage_model_global_pl_monitor"
 CONSISTENCY_MONITOR_URL = "https://data.kuainiu.io/collection/2632-pl"
-VOLATILITY_MONITOR_URL = "https://data.kuainiu.io/question/13519-v2"
+VOLATILITY_MONITOR_URL = "https://data.kuainiu.io/dashboard/2241-v3"
 LATEST_HOUR_COUNT_SQL = (
     f"select count(1) as alert_count from {MONITOR_TABLE} "
     f"where current_hour = (select max(current_hour) from {MONITOR_TABLE})"

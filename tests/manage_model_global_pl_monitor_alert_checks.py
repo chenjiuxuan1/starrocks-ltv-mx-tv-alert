@@ -150,7 +150,7 @@ class ManageModelGlobalPlMonitorAlertTests(unittest.TestCase):
         self.assertNotIn("查询表:", message)
         self.assertNotIn("查询详情:", message)
         self.assertIn("数据一致性监控:https://data.kuainiu.io/collection/2632-pl", message)
-        self.assertIn("数据波动监控:https://data.kuainiu.io/question/13519-v2", message)
+        self.assertIn("数据波动监控:https://data.kuainiu.io/dashboard/2241-v3", message)
         self.assertNotIn("@adamyu@kn.group", message)
         self.assertNotIn("@余红叶", message)
         self.assertNotIn("【告警记录 1】", message)
