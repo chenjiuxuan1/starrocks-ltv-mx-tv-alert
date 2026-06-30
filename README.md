@@ -97,4 +97,4 @@ python3 alert/mx_capital_ltv_alert.py \
 2. `资方LTV告警代码拉取` 下载 `chenjiuxuan1/starrocks-ltv-mx-tv-alert` 的 GitHub main 分支到跳板机 `/root/starrocks-ltv-mx-tv-alert`。
 3. `资方LTV告警触发` 执行 `python3 alert/mx_capital_ltv_alert.py`，并通过环境变量传入墨西哥 StarRocks 地址、库名和账号。
 
-注意：模板中的 `<MX_JUMP_HOST>`、`<MX_SR_HOST>`、`<SR_PASSWORD>`、`<SR_BACKUP_PASSWORD>`、`<MENTIONS>` 需要按生产环境替换；TV Bot 已固定为 `08826b39-e6eb-44fb-9c25-9778a8171f49`。
+模板已按“智能告警修复-墨西哥”的 n8n 配置写入墨西哥跳板机 `172.20.220.165`、SSH 凭据 `7oQDoS8H2buTjr7H / 墨西哥跳板机`、DB 连接信息和默认 @ 人；TV Bot 固定为 `08826b39-e6eb-44fb-9c25-9778a8171f49`。

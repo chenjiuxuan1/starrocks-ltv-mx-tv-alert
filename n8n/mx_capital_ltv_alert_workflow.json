@@ -31,7 +31,7 @@
     {
       "parameters": {
         "authentication": "privateKey",
-        "command": "ssh -p 36000 root@<MX_JUMP_HOST> \"cd /tmp && rm -rf starrocks-ltv-mx-tv-alert-main starrocks-ltv-mx-tv-alert-main.tar.gz && wget --tries=3 --retry-connrefused --waitretry=2 -O starrocks-ltv-mx-tv-alert-main.tar.gz https://github.com/chenjiuxuan1/starrocks-ltv-mx-tv-alert/archive/refs/heads/main.tar.gz && tar -xzf starrocks-ltv-mx-tv-alert-main.tar.gz && rm -rf /root/starrocks-ltv-mx-tv-alert && mkdir -p /root/starrocks-ltv-mx-tv-alert && cp -rf /tmp/starrocks-ltv-mx-tv-alert-main/. /root/starrocks-ltv-mx-tv-alert/\""
+        "command": "ssh -p 36000 root@172.20.220.165 'cd /tmp && rm -rf starrocks-ltv-mx-tv-alert-main starrocks-ltv-mx-tv-alert-main.tar.gz && wget --tries=3 --retry-connrefused --waitretry=2 -O starrocks-ltv-mx-tv-alert-main.tar.gz https://github.com/chenjiuxuan1/starrocks-ltv-mx-tv-alert/archive/refs/heads/main.tar.gz && tar -xzf starrocks-ltv-mx-tv-alert-main.tar.gz && rm -rf /root/starrocks-ltv-mx-tv-alert && mkdir -p /root/starrocks-ltv-mx-tv-alert && cp -rf /tmp/starrocks-ltv-mx-tv-alert-main/. /root/starrocks-ltv-mx-tv-alert/'"
       },
       "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
@@ -43,7 +43,7 @@
       "name": "资方LTV告警代码拉取",
       "credentials": {
         "sshPrivateKey": {
-          "id": "replace-with-mx-ssh-credential-id",
+          "id": "7oQDoS8H2buTjr7H",
           "name": "墨西哥跳板机"
         }
       }
@@ -51,7 +51,7 @@
     {
       "parameters": {
         "authentication": "privateKey",
-        "command": "ssh -p 36000 root@<MX_JUMP_HOST> \"cd /root/starrocks-ltv-mx-tv-alert && SR_HOST='<MX_SR_HOST>' SR_PORT='9030' SR_DB='dm_dd_new' SR_USERNAME='e_load' SR_BACKUP_USERNAME='backup_user' python3 alert/mx_capital_ltv_alert.py --sr-password '<SR_PASSWORD>' --sr-backup-password '<SR_BACKUP_PASSWORD>' --bot-id '08826b39-e6eb-44fb-9c25-9778a8171f49' --mentions '<MENTIONS>'\""
+        "command": "ssh -p 36000 root@172.20.220.165 'cd /root/starrocks-ltv-mx-tv-alert && SR_HOST=\"172.20.0.235\" SR_PORT=\"13306\" SR_DB=\"dm_dd_new\" SR_USERNAME=\"e_load\" SR_BACKUP_USERNAME=\"backup_user\" python3 alert/mx_capital_ltv_alert.py --sr-password \"S7ce4bb9\" --bot-id \"08826b39-e6eb-44fb-9c25-9778a8171f49\" --mentions \"kuiwu@kn.group,enzodeng@kn.group\"'"
       },
       "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
@@ -63,7 +63,7 @@
       "name": "资方LTV告警触发",
       "credentials": {
         "sshPrivateKey": {
-          "id": "replace-with-mx-ssh-credential-id",
+          "id": "7oQDoS8H2buTjr7H",
           "name": "墨西哥跳板机"
         }
       }
