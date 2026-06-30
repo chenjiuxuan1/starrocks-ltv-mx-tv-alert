@@ -146,7 +146,7 @@ def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_b
         f"from {MONITOR_TABLE} "
         "where stat_date = %s "
         "and capital in (%s, %s) "
-        "order by field(capital, %s, %s)"
+        "order by case capital when %s then 1 when %s then 2 else 99 end"
     )
     params = (
         target_date.strftime("%Y-%m-%d"),

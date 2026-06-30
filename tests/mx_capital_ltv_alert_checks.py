@@ -101,7 +101,10 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("from dm_dd_new.ads_capital_ltv", sql)
         self.assertIn("stat_date = %s", sql)
         self.assertIn("capital in (%s, %s)", sql)
-        self.assertIn("order by field(capital, %s, %s)", sql)
+        self.assertIn("order by case capital", sql)
+        self.assertIn("when %s then 1", sql)
+        self.assertIn("when %s then 2", sql)
+        self.assertNotIn("field(", sql.lower())
         self.assertEqual(
             params,
             ("2026-06-21", "new_share", "chuanjin", "new_share", "chuanjin"),
