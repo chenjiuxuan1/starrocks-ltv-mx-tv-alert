@@ -51,7 +51,7 @@
     {
       "parameters": {
         "authentication": "privateKey",
-        "command": "ssh -p 36000 root@172.20.220.165 'cd /root/starrocks-ltv-mx-tv-alert && SR_HOST=\"172.20.0.235\" SR_PORT=\"13306\" SR_DB=\"dm_dd_new\" SR_USERNAME=\"e_load\" SR_BACKUP_USERNAME=\"backup_user\" python3 alert/mx_capital_ltv_alert.py --sr-password \"S7ce4bb9\" --bot-id \"08826b39-e6eb-44fb-9c25-9778a8171f49\" --mentions \"kuiwu@kn.group,enzodeng@kn.group\"'"
+        "command": "ssh -p 36000 root@172.20.220.165 'cd /root/starrocks-ltv-mx-tv-alert && SR_HOST=\"172.20.0.235\" SR_PORT=\"13306\" SR_DB=\"dm_dd_new\" SR_USERNAME=\"e_load\" SR_BACKUP_USERNAME=\"backup_user\" python3 alert/mx_capital_ltv_alert.py --sr-password \"S7ce4bb9\" --bot-id \"08826b39-e6eb-44fb-9c25-9778a8171f49\" --mentions \"liorawu@kn.group\"'"
       },
       "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
