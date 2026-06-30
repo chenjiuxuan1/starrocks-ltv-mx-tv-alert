@@ -51,12 +51,20 @@ class FakeCursor:
     def __init__(self, rows=None):
         self.rows = rows or []
         self.executed = []
+        self.fetchone_index = 0
 
     def execute(self, sql, params=None):
         self.executed.append((sql, params))
 
     def fetchall(self):
         return self.rows
+
+    def fetchone(self):
+        if self.fetchone_index >= len(self.rows):
+            return None
+        row = self.rows[self.fetchone_index]
+        self.fetchone_index += 1
+        return row
 
 
 class FakeConnection:
@@ -72,7 +80,7 @@ class FakeConnection:
 
 
 class MxCapitalLtvAlertTests(unittest.TestCase):
-    def test_fetch_capital_ltv_rows_queries_t_minus_one_for_two_capitals(self):
+    def test_fetch_capital_ltv_rows_runs_two_latest_record_queries_for_two_capitals(self):
         module = load_module()
         fake_conn = FakeConnection(
             [
@@ -82,6 +90,13 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                     "ltv": 0.66,
                     "normal_loan_amt": 123,
                     "account_balance": 4420001,
+                },
+                {
+                    "stat_date": date(2026, 6, 21),
+                    "capital": "chuanjin",
+                    "ltv": 1.5,
+                    "normal_loan_amt": 456,
+                    "account_balance": 424001,
                 }
             ]
         )
@@ -96,19 +111,17 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         with mock.patch.object(module.pymysql, "connect", return_value=fake_conn):
             rows = module.fetch_capital_ltv_rows(target_date=date(2026, 6, 21), config=config)
 
-        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(fake_conn.cursor_obj.executed), 2)
         sql, params = fake_conn.cursor_obj.executed[0]
         self.assertIn("from dm_dd_new.ads_capital_ltv", sql)
-        self.assertIn("stat_date = %s", sql)
-        self.assertIn("capital in (%s, %s)", sql)
-        self.assertIn("order by case capital", sql)
-        self.assertIn("when %s then 1", sql)
-        self.assertIn("when %s then 2", sql)
+        self.assertIn("stat_date >= %s", sql)
+        self.assertIn("capital = %s", sql)
+        self.assertIn("order by stat_date desc", sql)
+        self.assertIn("limit 1", sql)
         self.assertNotIn("field(", sql.lower())
-        self.assertEqual(
-            params,
-            ("2026-06-21", "new_share", "chuanjin", "new_share", "chuanjin"),
-        )
+        self.assertEqual(params, ("2026-05-01", "new_share"))
+        self.assertEqual(fake_conn.cursor_obj.executed[1][1], ("2026-05-01", "chuanjin"))
         self.assertTrue(fake_conn.closed)
 
     def test_format_alert_message_includes_new_share_qualified_and_balance_tag(self):
@@ -133,6 +146,10 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("ltv值: 0.66", message)
         self.assertIn("在阈值0.75以下，在合格线", message)
         self.assertIn("通道余额大于44,200,00，续关注", message)
+        self.assertIn("告警项: 墨西哥串金ltv", message)
+        self.assertIn("通道余额: 未查询到", message)
+        self.assertIn("ltv值: 未查询到", message)
+        self.assertIn("附加标签: 未查询到该资方 LTV 数据，需检查 dm_dd_new.ads_capital_ltv 产出", message)
 
     def test_format_alert_message_includes_chuanjin_emergency_and_reduction_watch_tags(self):
         module = load_module()
@@ -168,6 +185,17 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("通道余额大于424,000，续关注", emergency)
         self.assertIn("在阈值1.43以上，但需关注通道余额或者资产，是否需要减持", reduction_watch)
         self.assertNotIn("通道余额大于424,000", reduction_watch)
+
+    def test_format_alert_message_always_outputs_two_capital_sections(self):
+        module = load_module()
+
+        message = module.format_alert_message([], target_date=date(2026, 6, 21))
+
+        self.assertIn("告警项: 墨西哥新分享ltv", message)
+        self.assertIn("信托账户余额: 未查询到", message)
+        self.assertIn("告警项: 墨西哥串金ltv", message)
+        self.assertIn("通道余额: 未查询到", message)
+        self.assertEqual(message.count("附加标签:"), 2)
 
     def test_run_sends_formatted_message_to_tv(self):
         module = load_module()

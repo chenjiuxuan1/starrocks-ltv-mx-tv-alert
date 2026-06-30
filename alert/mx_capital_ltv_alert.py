@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-查询墨西哥资方 LTV T-1 数据并发送 TV 告警。
+查询墨西哥资方 LTV 最新数据并发送 TV 告警。
 
 依赖 DolphinScheduler 任务:
     ads_capital_ltv（资方ltv监测）
@@ -9,8 +9,10 @@
 默认查询:
     select stat_date, capital, ltv, normal_loan_amt, account_balance
     from dm_dd_new.ads_capital_ltv
-    where stat_date = T-1
-      and capital in ('new_share', 'chuanjin')
+    where stat_date >= '2026-05-01'
+      and capital = 'new_share' / 'chuanjin'
+    order by stat_date desc
+    limit 1
 """
 
 import argparse
@@ -53,6 +55,7 @@ DEFAULT_MENTIONS = [
 ]
 
 MONITOR_TABLE = "dm_dd_new.ads_capital_ltv"
+DEFAULT_START_DATE = "2026-05-01"
 CAPITAL_ORDER = ("new_share", "chuanjin")
 CAPITAL_LABELS = {
     "new_share": "墨西哥新分享ltv",
@@ -134,7 +137,6 @@ def parse_date(value):
 
 
 def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_backup_password=None):
-    target_date = parse_date(target_date) or default_target_date()
     if config is None:
         config = get_starrocks_config(
             sr_password=sr_password,
@@ -144,22 +146,21 @@ def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_b
     sql = (
         "select stat_date, capital, ltv, normal_loan_amt, account_balance "
         f"from {MONITOR_TABLE} "
-        "where stat_date = %s "
-        "and capital in (%s, %s) "
-        "order by case capital when %s then 1 when %s then 2 else 99 end"
-    )
-    params = (
-        target_date.strftime("%Y-%m-%d"),
-        CAPITAL_ORDER[0],
-        CAPITAL_ORDER[1],
-        CAPITAL_ORDER[0],
-        CAPITAL_ORDER[1],
+        "where stat_date >= %s "
+        "and capital = %s "
+        "order by stat_date desc "
+        "limit 1"
     )
     conn = get_connection(config=config)
     try:
         cursor = conn.cursor()
-        cursor.execute(sql, params)
-        return list(cursor.fetchall())
+        rows = []
+        for capital in CAPITAL_ORDER:
+            cursor.execute(sql, (DEFAULT_START_DATE, capital))
+            row = cursor.fetchone()
+            if row:
+                rows.append(row)
+        return rows
     finally:
         conn.close()
 
@@ -176,7 +177,7 @@ def _decimal(value):
 def _format_number(value):
     number = _decimal(value)
     if number is None:
-        return ""
+        return "未查询到"
     normalized = number.quantize(Decimal("0.01")) if number != number.to_integral() else number.quantize(Decimal("1"))
     return f"{normalized:,.2f}".rstrip("0").rstrip(".")
 
@@ -186,7 +187,7 @@ def _format_date(value):
         return value.strftime("%Y-%m-%d")
     if isinstance(value, date):
         return value.strftime("%Y-%m-%d")
-    return str(value or "")
+    return str(value or "未查询到")
 
 
 def _ltv_tag(capital, ltv):
@@ -234,19 +235,27 @@ def format_alert_message(rows, target_date=None):
         f"依赖任务: ads_capital_ltv（资方ltv监测）",
     ]
 
-    rows = _sort_rows(rows)
-    if not rows:
-        lines.append("未查询到 T-1 资方 LTV 数据，需检查 dm_dd_new.ads_capital_ltv 产出。")
-        return "\n".join(lines)
+    rows_by_capital = {str(row.get("capital") or ""): row for row in _sort_rows(rows)}
 
-    for row in rows:
-        capital = str(row.get("capital") or "")
-        ltv = row.get("ltv")
-        balance = row.get("account_balance")
-        tags = [_ltv_tag(capital, ltv)]
-        balance_tag = _balance_tag(capital, balance)
-        if balance_tag:
-            tags.append(balance_tag)
+    for capital in CAPITAL_ORDER:
+        row = rows_by_capital.get(capital)
+        if row:
+            ltv = row.get("ltv")
+            balance = row.get("account_balance")
+            tags = [_ltv_tag(capital, ltv)]
+            balance_tag = _balance_tag(capital, balance)
+            if balance_tag:
+                tags.append(balance_tag)
+        else:
+            row = {
+                "stat_date": target_date,
+                "normal_loan_amt": None,
+                "account_balance": None,
+                "ltv": None,
+            }
+            balance = None
+            ltv = None
+            tags = [f"未查询到该资方 LTV 数据，需检查 {MONITOR_TABLE} 产出"]
 
         lines.extend(
             [

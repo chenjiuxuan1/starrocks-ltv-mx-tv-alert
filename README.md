@@ -7,7 +7,7 @@
 - `alert/fin_manage_ods_data_quality_monitor_alert.py`
   统计 `fin.fin_manage_ods_data_quality_monitor` 的总记录数与 `diff <> 0` 的异常记录数，按“数仓与财务库数据一致性校验”格式发送到 TV 机器人。
 - `alert/mx_capital_ltv_alert.py`
-  查询墨西哥 `dm_dd_new.ads_capital_ltv` T-1 的 `new_share` 与 `chuanjin` 资方 LTV、账户余额和质押正常在贷，按资方阈值生成“墨西哥资方ltv告警”。
+  分别查询墨西哥 `dm_dd_new.ads_capital_ltv` 中 `new_share` 与 `chuanjin` 自 `2026-05-01` 起的最新资方 LTV、账户余额和质押正常在贷，按资方阈值生成“墨西哥资方ltv告警”。
 
 ## 运行
 
