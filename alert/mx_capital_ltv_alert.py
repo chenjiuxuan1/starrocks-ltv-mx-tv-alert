@@ -64,6 +64,7 @@ DEFAULT_MENTIONS = [
 MONITOR_TABLE = "dm_dd_new.ads_capital_ltv"
 DEFAULT_START_DATE = "2026-05-01"
 CAPITAL_ORDER = ("new_share", "chuanjin")
+CAPITAL_CHOICES = ("all",) + CAPITAL_ORDER
 CAPITAL_LABELS = {
     "new_share": "墨西哥新分享ltv",
     "chuanjin": "墨西哥串金ltv",
@@ -143,7 +144,17 @@ def parse_date(value):
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_backup_password=None):
+def _selected_capitals(capital=None, capitals=None):
+    if capitals is not None:
+        return list(capitals)
+    if capital in (None, "all"):
+        return list(CAPITAL_ORDER)
+    if capital not in CAPITAL_ORDER:
+        raise ValueError(f"Unsupported capital: {capital}")
+    return [capital]
+
+
+def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_backup_password=None, capital=None, capitals=None):
     if config is None:
         config = get_starrocks_config(
             sr_password=sr_password,
@@ -170,8 +181,8 @@ def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_b
     try:
         cursor = conn.cursor()
         rows = []
-        for capital in CAPITAL_ORDER:
-            cursor.execute(sql, (DEFAULT_START_DATE, capital))
+        for capital_item in _selected_capitals(capital=capital, capitals=capitals):
+            cursor.execute(sql, (DEFAULT_START_DATE, capital_item))
             row = cursor.fetchone()
             if row:
                 rows.append(row)
@@ -246,7 +257,7 @@ def _sort_rows(rows):
     return sorted(rows, key=lambda row: order.get(str(row.get("capital")), 99))
 
 
-def format_alert_message(rows, target_date=None):
+def format_alert_message(rows, target_date=None, capital=None, capitals=None):
     target_date = parse_date(target_date) or default_target_date()
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
@@ -258,7 +269,7 @@ def format_alert_message(rows, target_date=None):
 
     rows_by_capital = {str(row.get("capital") or ""): row for row in _sort_rows(rows)}
 
-    for capital in CAPITAL_ORDER:
+    for capital in _selected_capitals(capital=capital, capitals=capitals):
         row = rows_by_capital.get(capital)
         if row:
             ltv = row.get("ltv")
@@ -346,14 +357,14 @@ def send_to_tv(message, mentions=None, bot_id=None, api_url=None):
         }
 
 
-def run(dry_run=False, mentions=None, sr_password=None, sr_backup_password=None, bot_id=None, target_date=None):
+def run(dry_run=False, mentions=None, sr_password=None, sr_backup_password=None, bot_id=None, target_date=None, capital=None):
     target_date = parse_date(target_date) or default_target_date()
     config = get_starrocks_config(
         sr_password=sr_password,
         sr_backup_password=sr_backup_password,
     )
-    rows = fetch_capital_ltv_rows(target_date=target_date, config=config)
-    message = format_alert_message(rows, target_date=target_date)
+    rows = fetch_capital_ltv_rows(target_date=target_date, config=config, capital=capital)
+    message = format_alert_message(rows, target_date=target_date, capital=capital)
     if not message.endswith("\n"):
         message = f"{message}\n"
 
@@ -378,6 +389,12 @@ def parse_args(argv=None):
     parser.add_argument("--sr-backup-password", default=None, help="StarRocks 备份账号密码")
     parser.add_argument("--bot-id", default=None, help="指定发送使用的 TV 机器人 ID")
     parser.add_argument(
+        "--capital",
+        choices=CAPITAL_CHOICES,
+        default="all",
+        help="指定告警资方：all/new_share/chuanjin；默认 all",
+    )
+    parser.add_argument(
         "--mentions",
         default=",".join(DEFAULT_MENTIONS),
         help="逗号分隔的提醒邮箱列表",
@@ -395,6 +412,7 @@ def main(argv=None):
         sr_backup_password=args.sr_backup_password,
         bot_id=args.bot_id,
         target_date=parse_date(args.target_date),
+        capital=args.capital,
     )
     return 0 if result["success"] else 1
 

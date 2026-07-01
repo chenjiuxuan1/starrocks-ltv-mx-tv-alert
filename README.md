@@ -95,6 +95,7 @@ python3 alert/mx_capital_ltv_alert.py \
 
 1. `Webhook` 触发，建议路径 `MX_ZF_LTV`。
 2. `资方LTV告警代码拉取` 下载 `chenjiuxuan1/starrocks-ltv-mx-tv-alert` 的 GitHub main 分支到跳板机 `/root/starrocks-ltv-mx-tv-alert`。
-3. `资方LTV告警触发` 执行 `python3 alert/mx_capital_ltv_alert.py`，并通过环境变量传入墨西哥 StarRocks 地址、库名和账号。
+3. `新分享LTV告警触发` 执行 `python3 alert/mx_capital_ltv_alert.py --capital new_share`，发送“墨西哥新分享ltv”通知。
+4. `串金LTV告警触发` 执行 `python3 alert/mx_capital_ltv_alert.py --capital chuanjin`，发送“墨西哥串金ltv”通知。
 
 模板已按“智能告警修复-墨西哥”的 n8n 配置写入墨西哥跳板机 `172.20.220.165`、SSH 凭据 `7oQDoS8H2buTjr7H / 墨西哥跳板机`、墨西哥 SR 连接信息和默认 @ 人 `liorawu@kn.group`；TV Bot 固定为 `08826b39-e6eb-44fb-9c25-9778a8171f49`。

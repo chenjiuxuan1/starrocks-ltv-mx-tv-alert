@@ -219,6 +219,15 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("通道余额: 未查询到", message)
         self.assertEqual(message.count("附加标签:"), 2)
 
+    def test_format_alert_message_can_output_only_requested_capital(self):
+        module = load_module()
+
+        message = module.format_alert_message([], target_date=date(2026, 6, 21), capitals=["chuanjin"])
+
+        self.assertNotIn("告警项: 墨西哥新分享ltv", message)
+        self.assertIn("告警项: 墨西哥串金ltv", message)
+        self.assertEqual(message.count("告警项:"), 1)
+
     def test_run_sends_formatted_message_to_tv(self):
         module = load_module()
         rows = [
@@ -257,6 +266,43 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertEqual(send.call_args.kwargs["mentions"], ["owner@kn.group"])
         self.assertEqual(send.call_args.kwargs["bot_id"], "bot-1")
 
+    def test_run_can_send_only_requested_capital_message(self):
+        module = load_module()
+        rows = [
+            {
+                "stat_date": "2026-06-21",
+                "capital": "chuanjin",
+                "ltv": 1.5,
+                "normal_loan_amt_peso": 100,
+                "normal_loan_amt_usd": 5,
+                "account_balance_peso": 424001,
+                "account_balance_usd": 21200.05,
+                "exchange_usd_rate": 20,
+            }
+        ]
+
+        with mock.patch.object(module, "fetch_capital_ltv_rows", return_value=rows) as fetch:
+            with mock.patch.object(
+                module,
+                "send_to_tv",
+                return_value={"success": True, "status_code": 200, "response": "ok"},
+            ) as send:
+                with mock.patch("builtins.print"):
+                    result = module.run(
+                        capital="chuanjin",
+                        mentions=["owner@kn.group"],
+                        sr_password="primary-secret",
+                        sr_backup_password="backup-secret",
+                        bot_id="bot-1",
+                    )
+
+        self.assertTrue(result["success"])
+        fetch.assert_called_once()
+        self.assertEqual(fetch.call_args.kwargs["capital"], "chuanjin")
+        message = send.call_args.args[0]
+        self.assertNotIn("墨西哥新分享ltv", message)
+        self.assertIn("墨西哥串金ltv", message)
+
     def test_send_to_tv_uses_requested_bot_and_mentions_field(self):
         module = load_module()
         captured = {}
@@ -291,6 +337,7 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
             sr_backup_password=None,
             bot_id=None,
             target_date=None,
+            capital=None,
         ):
             captured["dry_run"] = dry_run
             captured["mentions"] = mentions
@@ -298,6 +345,7 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
             captured["sr_backup_password"] = sr_backup_password
             captured["bot_id"] = bot_id
             captured["target_date"] = target_date
+            captured["capital"] = capital
             return {"success": True, "status_code": None, "response": "ok"}
 
         with mock.patch.object(module, "run", side_effect=fake_run):
@@ -312,6 +360,8 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                     "backup-secret",
                     "--bot-id",
                     "bot-1",
+                    "--capital",
+                    "chuanjin",
                     "--mentions",
                     "owner@kn.group,backup@kn.group",
                 ]
@@ -324,6 +374,7 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertEqual(captured["sr_backup_password"], "backup-secret")
         self.assertEqual(captured["bot_id"], "bot-1")
         self.assertEqual(captured["target_date"], date(2026, 6, 21))
+        self.assertEqual(captured["capital"], "chuanjin")
 
 
 if __name__ == "__main__":
