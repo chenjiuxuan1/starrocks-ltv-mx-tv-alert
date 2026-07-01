@@ -88,15 +88,21 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                     "stat_date": date(2026, 6, 21),
                     "capital": "new_share",
                     "ltv": 0.66,
-                    "normal_loan_amt": 123,
-                    "account_balance": 4420001,
+                    "normal_loan_amt_peso": 123,
+                    "normal_loan_amt_usd": 6.15,
+                    "account_balance_peso": 4420001,
+                    "account_balance_usd": 221000.05,
+                    "exchange_usd_rate": 20,
                 },
                 {
                     "stat_date": date(2026, 6, 21),
                     "capital": "chuanjin",
                     "ltv": 1.5,
-                    "normal_loan_amt": 456,
-                    "account_balance": 424001,
+                    "normal_loan_amt_peso": 456,
+                    "normal_loan_amt_usd": 22.8,
+                    "account_balance_peso": 424001,
+                    "account_balance_usd": 21200.05,
+                    "exchange_usd_rate": 20,
                 }
             ]
         )
@@ -115,9 +121,14 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertEqual(len(fake_conn.cursor_obj.executed), 2)
         sql, params = fake_conn.cursor_obj.executed[0]
         self.assertIn("from dm_dd_new.ads_capital_ltv", sql)
+        self.assertIn("inner join dim.dim_currency_rate", sql)
+        self.assertIn("a.normal_loan_amt / b.exchange_usd_rate as normal_loan_amt_usd", sql)
+        self.assertIn("a.account_balance / b.exchange_usd_rate as account_balance_usd", sql)
+        self.assertIn("b.exchange_usd_rate", sql)
         self.assertIn("stat_date >= %s", sql)
-        self.assertIn("capital = %s", sql)
-        self.assertIn("order by stat_date desc", sql)
+        self.assertIn("a.capital = %s", sql)
+        self.assertIn("b.currency_code = 'MXN'", sql)
+        self.assertIn("order by a.stat_date desc", sql)
         self.assertIn("limit 1", sql)
         self.assertNotIn("field(", sql.lower())
         self.assertEqual(params, ("2026-05-01", "new_share"))
@@ -131,8 +142,11 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                 "stat_date": date(2026, 6, 21),
                 "capital": "new_share",
                 "ltv": 0.66,
-                "normal_loan_amt": 1000000,
-                "account_balance": 4420001,
+                "normal_loan_amt_peso": 1000000,
+                "normal_loan_amt_usd": 50000,
+                "account_balance_peso": 4420001,
+                "account_balance_usd": 221000.05,
+                "exchange_usd_rate": 20,
             }
         ]
 
@@ -141,9 +155,10 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("墨西哥资方ltv告警", message)
         self.assertIn("统计日: 2026-06-21", message)
         self.assertIn("告警项: 墨西哥新分享ltv", message)
-        self.assertIn("信托账户余额: 4,420,001", message)
-        self.assertIn("质押正常在贷: 1,000,000", message)
+        self.assertIn("信托账户余额: 4,420,001 比索，即 221,000.05 美元", message)
+        self.assertIn("质押正常在贷: 1,000,000 比索，即 50,000 美元", message)
         self.assertIn("ltv值: 0.66", message)
+        self.assertIn("兑美元汇率: 20", message)
         self.assertIn("在阈值0.75以下，在合格线", message)
         self.assertIn("通道余额大于44,200,00，续关注", message)
         self.assertIn("告警项: 墨西哥串金ltv", message)
@@ -160,8 +175,11 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                     "stat_date": "2026-06-21",
                     "capital": "chuanjin",
                     "ltv": 1.42,
-                    "normal_loan_amt": 200000,
-                    "account_balance": 424001,
+                    "normal_loan_amt_peso": 200000,
+                    "normal_loan_amt_usd": 10000,
+                    "account_balance_peso": 424001,
+                    "account_balance_usd": 21200.05,
+                    "exchange_usd_rate": 20,
                 }
             ],
             target_date=date(2026, 6, 21),
@@ -172,15 +190,19 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                     "stat_date": "2026-06-21",
                     "capital": "chuanjin",
                     "ltv": 1.9,
-                    "normal_loan_amt": 200000,
-                    "account_balance": 1,
+                    "normal_loan_amt_peso": 200000,
+                    "normal_loan_amt_usd": 10000,
+                    "account_balance_peso": 1,
+                    "account_balance_usd": 0.05,
+                    "exchange_usd_rate": 20,
                 }
             ],
             target_date=date(2026, 6, 21),
         )
 
         self.assertIn("告警项: 墨西哥串金ltv", emergency)
-        self.assertIn("通道余额: 424,001", emergency)
+        self.assertIn("通道余额: 424,001 比索，即 21,200.05 美元", emergency)
+        self.assertIn("兑美元汇率: 20", emergency)
         self.assertIn("在阈值1.43以下，需紧急介入线", emergency)
         self.assertIn("通道余额大于424,000，续关注", emergency)
         self.assertIn("在阈值1.43以上，但需关注通道余额或者资产，是否需要减持", reduction_watch)
@@ -204,8 +226,11 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
                 "stat_date": "2026-06-21",
                 "capital": "new_share",
                 "ltv": 0.76,
-                "normal_loan_amt": 100,
-                "account_balance": 10,
+                "normal_loan_amt_peso": 100,
+                "normal_loan_amt_usd": 5,
+                "account_balance_peso": 10,
+                "account_balance_usd": 0.5,
+                "exchange_usd_rate": 20,
             }
         ]
 

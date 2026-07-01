@@ -7,11 +7,18 @@
     ads_capital_ltv（资方ltv监测）
 
 默认查询:
-    select stat_date, capital, ltv, normal_loan_amt, account_balance
-    from dm_dd_new.ads_capital_ltv
-    where stat_date >= '2026-05-01'
-      and capital = 'new_share' / 'chuanjin'
-    order by stat_date desc
+    select a.stat_date, a.capital, a.ltv,
+           a.normal_loan_amt,
+           a.normal_loan_amt / b.exchange_usd_rate,
+           a.account_balance,
+           a.account_balance / b.exchange_usd_rate,
+           b.exchange_usd_rate
+    from dm_dd_new.ads_capital_ltv a
+    inner join dim.dim_currency_rate b on a.stat_date = b.stat_date
+    where a.stat_date >= '2026-05-01'
+      and a.capital = 'new_share' / 'chuanjin'
+      and b.currency_code = 'MXN'
+    order by a.stat_date desc
     limit 1
 """
 
@@ -144,11 +151,19 @@ def fetch_capital_ltv_rows(target_date=None, config=None, sr_password=None, sr_b
         )
 
     sql = (
-        "select stat_date, capital, ltv, normal_loan_amt, account_balance "
-        f"from {MONITOR_TABLE} "
-        "where stat_date >= %s "
-        "and capital = %s "
-        "order by stat_date desc "
+        "select a.stat_date, a.capital, a.ltv, "
+        "a.normal_loan_amt as normal_loan_amt_peso, "
+        "a.normal_loan_amt / b.exchange_usd_rate as normal_loan_amt_usd, "
+        "a.account_balance as account_balance_peso, "
+        "a.account_balance / b.exchange_usd_rate as account_balance_usd, "
+        "b.exchange_usd_rate "
+        f"from {MONITOR_TABLE} a "
+        "inner join dim.dim_currency_rate b "
+        "on a.stat_date = b.stat_date "
+        "and b.currency_code = 'MXN' "
+        "where a.stat_date >= %s "
+        "and a.capital = %s "
+        "order by a.stat_date desc "
         "limit 1"
     )
     conn = get_connection(config=config)
@@ -188,6 +203,12 @@ def _format_date(value):
     if isinstance(value, date):
         return value.strftime("%Y-%m-%d")
     return str(value or "未查询到")
+
+
+def _format_money(peso_value, usd_value):
+    if _decimal(peso_value) is None and _decimal(usd_value) is None:
+        return "未查询到"
+    return f"{_format_number(peso_value)} 比索，即 {_format_number(usd_value)} 美元"
 
 
 def _ltv_tag(capital, ltv):
@@ -241,7 +262,7 @@ def format_alert_message(rows, target_date=None):
         row = rows_by_capital.get(capital)
         if row:
             ltv = row.get("ltv")
-            balance = row.get("account_balance")
+            balance = row.get("account_balance_peso", row.get("account_balance"))
             tags = [_ltv_tag(capital, ltv)]
             balance_tag = _balance_tag(capital, balance)
             if balance_tag:
@@ -249,8 +270,11 @@ def format_alert_message(rows, target_date=None):
         else:
             row = {
                 "stat_date": target_date,
-                "normal_loan_amt": None,
-                "account_balance": None,
+                "normal_loan_amt_peso": None,
+                "normal_loan_amt_usd": None,
+                "account_balance_peso": None,
+                "account_balance_usd": None,
+                "exchange_usd_rate": None,
                 "ltv": None,
             }
             balance = None
@@ -262,9 +286,10 @@ def format_alert_message(rows, target_date=None):
                 "",
                 f"告警项: {CAPITAL_LABELS.get(capital, capital or '未知资方')}",
                 f"统计日: {_format_date(row.get('stat_date')) or target_date.strftime('%Y-%m-%d')}",
-                f"{BALANCE_LABELS.get(capital, '账户余额')}: {_format_number(balance)}",
-                f"质押正常在贷: {_format_number(row.get('normal_loan_amt'))}",
+                f"{BALANCE_LABELS.get(capital, '账户余额')}: {_format_money(row.get('account_balance_peso', row.get('account_balance')), row.get('account_balance_usd'))}",
+                f"质押正常在贷: {_format_money(row.get('normal_loan_amt_peso', row.get('normal_loan_amt')), row.get('normal_loan_amt_usd'))}",
                 f"ltv值: {_format_number(ltv)}",
+                f"兑美元汇率: {_format_number(row.get('exchange_usd_rate'))}",
                 f"附加标签: {'；'.join(tags)}",
             ]
         )
