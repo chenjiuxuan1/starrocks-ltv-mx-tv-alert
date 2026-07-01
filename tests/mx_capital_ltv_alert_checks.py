@@ -163,7 +163,7 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("ltv值: 0.66", message)
         self.assertIn("兑美元汇率: 20", message)
         self.assertIn("在阈值0.75以下，在合格线", message)
-        self.assertIn("通道余额大于44,200,00，续关注", message)
+        self.assertIn("通道余额大于44,200,00，需关注", message)
         self.assertIn("告警项: 墨西哥串金ltv", message)
         self.assertIn("通道余额: 未查询到", message)
         self.assertIn("ltv值: 未查询到", message)
@@ -207,7 +207,7 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertIn("通道余额: 424,001 比索，即 21,200.05 美元", emergency)
         self.assertIn("兑美元汇率: 20", emergency)
         self.assertIn("在阈值1.43以下，需紧急介入线", emergency)
-        self.assertIn("通道余额大于424,000，续关注", emergency)
+        self.assertIn("通道余额大于424,000，需关注", emergency)
         self.assertIn("在阈值1.43以上，但需关注通道余额或者资产，是否需要减持", reduction_watch)
         self.assertNotIn("通道余额大于424,000", reduction_watch)
 

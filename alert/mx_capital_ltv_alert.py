@@ -246,9 +246,9 @@ def _balance_tag(capital, balance):
     if balance_value is None:
         return None
     if capital == "new_share" and balance_value > NEW_SHARE_BALANCE_THRESHOLD:
-        return "通道余额大于44,200,00，续关注"
+        return "通道余额大于44,200,00，需关注"
     if capital == "chuanjin" and balance_value > CHUANJIN_BALANCE_THRESHOLD:
-        return "通道余额大于424,000，续关注"
+        return "通道余额大于424,000，需关注"
     return None
 
 
