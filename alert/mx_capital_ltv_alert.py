@@ -50,7 +50,7 @@ TV_API_URL = os.environ.get(
 )
 TV_BOT_ID = os.environ.get(
     "MX_CAPITAL_LTV_TV_BOT_ID",
-    "08826b39-e6eb-44fb-9c25-9778a8171f49",
+    "5d0be3c3-0e06-4134-bbbe-690d7ff28d1e",
 )
 DEFAULT_MENTIONS = [
     item.strip()
@@ -262,7 +262,6 @@ def format_alert_message(rows, target_date=None, capital=None, capitals=None):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
         "🚨 墨西哥资方ltv告警",
-        f"统计日: {target_date.strftime('%Y-%m-%d')}",
         f"告警时间: {now}",
         f"依赖任务: ads_capital_ltv（资方ltv监测）",
     ]

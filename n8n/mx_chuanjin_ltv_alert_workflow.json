@@ -1,10 +1,10 @@
 {
-  "name": "墨西哥资方ltv告警",
+  "name": "墨西哥串金ltv告警",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "MX_ZF_LTV",
+        "path": "MX_CHUANJIN_LTV",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -13,9 +13,9 @@
         0,
         0
       ],
-      "id": "mx-capital-ltv-webhook",
+      "id": "mx-chuanjin-ltv-webhook",
       "name": "Webhook",
-      "webhookId": "replace-with-generated-webhook-id"
+      "webhookId": "replace-with-generated-chuanjin-webhook-id"
     },
     {
       "parameters": {},
@@ -25,7 +25,7 @@
         0,
         144
       ],
-      "id": "mx-capital-ltv-manual",
+      "id": "mx-chuanjin-ltv-manual",
       "name": "When clicking 'Execute workflow'"
     },
     {
@@ -39,8 +39,8 @@
         288,
         72
       ],
-      "id": "mx-capital-ltv-code-pull",
-      "name": "资方LTV告警代码拉取",
+      "id": "mx-chuanjin-ltv-code-pull",
+      "name": "串金LTV告警代码拉取",
       "credentials": {
         "sshPrivateKey": {
           "id": "7oQDoS8H2buTjr7H",
@@ -51,33 +51,13 @@
     {
       "parameters": {
         "authentication": "privateKey",
-        "command": "ssh -p 36000 root@172.20.220.165 \"cd /root/starrocks-ltv-mx-tv-alert && SR_HOST='172.20.221.11' SR_PORT='9031' SR_DB='dm_dd_new' SR_USERNAME='e_load' SR_BACKUP_USERNAME='backup_user' python3 alert/mx_capital_ltv_alert.py --capital new_share --sr-password '\\$iF\\$lmek1pA8ctMg' --sr-backup-password 'IIzc5vsS047b' --bot-id '08826b39-e6eb-44fb-9c25-9778a8171f49' --mentions 'liorawu@kn.group'\""
+        "command": "ssh -p 36000 root@172.20.220.165 \"cd /root/starrocks-ltv-mx-tv-alert && SR_HOST='172.20.221.11' SR_PORT='9031' SR_DB='dm_dd_new' SR_USERNAME='e_load' SR_BACKUP_USERNAME='backup_user' python3 alert/mx_capital_ltv_alert.py --capital chuanjin --sr-password '\\$iF\\$lmek1pA8ctMg' --sr-backup-password 'IIzc5vsS047b' --bot-id '5d0be3c3-0e06-4134-bbbe-690d7ff28d1e' --mentions 'liorawu@kn.group'\""
       },
       "type": "n8n-nodes-base.ssh",
       "typeVersion": 1,
       "position": [
         544,
-        0
-      ],
-      "id": "mx-new-share-ltv-alert-run",
-      "name": "新分享LTV告警触发",
-      "credentials": {
-        "sshPrivateKey": {
-          "id": "7oQDoS8H2buTjr7H",
-          "name": "墨西哥跳板机"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "authentication": "privateKey",
-        "command": "ssh -p 36000 root@172.20.220.165 \"cd /root/starrocks-ltv-mx-tv-alert && SR_HOST='172.20.221.11' SR_PORT='9031' SR_DB='dm_dd_new' SR_USERNAME='e_load' SR_BACKUP_USERNAME='backup_user' python3 alert/mx_capital_ltv_alert.py --capital chuanjin --sr-password '\\$iF\\$lmek1pA8ctMg' --sr-backup-password 'IIzc5vsS047b' --bot-id '08826b39-e6eb-44fb-9c25-9778a8171f49' --mentions 'liorawu@kn.group'\""
-      },
-      "type": "n8n-nodes-base.ssh",
-      "typeVersion": 1,
-      "position": [
-        544,
-        144
+        72
       ],
       "id": "mx-chuanjin-ltv-alert-run",
       "name": "串金LTV告警触发",
@@ -95,7 +75,7 @@
       "main": [
         [
           {
-            "node": "资方LTV告警代码拉取",
+            "node": "串金LTV告警代码拉取",
             "type": "main",
             "index": 0
           }
@@ -106,21 +86,16 @@
       "main": [
         [
           {
-            "node": "资方LTV告警代码拉取",
+            "node": "串金LTV告警代码拉取",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "资方LTV告警代码拉取": {
+    "串金LTV告警代码拉取": {
       "main": [
         [
-          {
-            "node": "新分享LTV告警触发",
-            "type": "main",
-            "index": 0
-          },
           {
             "node": "串金LTV告警触发",
             "type": "main",

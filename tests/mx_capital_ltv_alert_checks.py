@@ -9,6 +9,7 @@ from unittest import mock
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "alert" / "mx_capital_ltv_alert.py"
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_module():
@@ -154,6 +155,8 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
 
         self.assertIn("墨西哥资方ltv告警", message)
         self.assertIn("统计日: 2026-06-21", message)
+        self.assertLess(message.index("告警时间:"), message.index("依赖任务:"))
+        self.assertLess(message.index("依赖任务:"), message.index("告警项: 墨西哥新分享ltv"))
         self.assertIn("告警项: 墨西哥新分享ltv", message)
         self.assertIn("信托账户余额: 4,420,001 比索，即 221,000.05 美元", message)
         self.assertIn("质押正常在贷: 1,000,000 比索，即 50,000 美元", message)
@@ -326,6 +329,20 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
             },
         )
 
+    def test_send_to_tv_uses_mx_ltv_bot_by_default(self):
+        module = load_module()
+        captured = {}
+
+        def fake_urlopen(request, timeout=0):
+            captured["body"] = json.loads(request.data.decode("utf-8"))
+            return FakeResponse(200, '{"ok":true}')
+
+        with mock.patch.object(module.urllib.request, "urlopen", side_effect=fake_urlopen):
+            result = module.send_to_tv("告警内容", mentions=["owner@kn.group"])
+
+        self.assertTrue(result["success"])
+        self.assertEqual(captured["body"]["botId"], "5d0be3c3-0e06-4134-bbbe-690d7ff28d1e")
+
     def test_main_passes_cli_arguments_to_run(self):
         module = load_module()
         captured = {}
@@ -375,6 +392,42 @@ class MxCapitalLtvAlertTests(unittest.TestCase):
         self.assertEqual(captured["bot_id"], "bot-1")
         self.assertEqual(captured["target_date"], date(2026, 6, 21))
         self.assertEqual(captured["capital"], "chuanjin")
+
+    def test_n8n_workflows_are_split_by_capital_with_separate_webhooks(self):
+        expected_bot_id = "5d0be3c3-0e06-4134-bbbe-690d7ff28d1e"
+        workflow_specs = [
+            (
+                "n8n/mx_new_share_ltv_alert_workflow.json",
+                "墨西哥新分享ltv告警",
+                "MX_NEW_SHARE_LTV",
+                "--capital new_share",
+                "--capital chuanjin",
+            ),
+            (
+                "n8n/mx_chuanjin_ltv_alert_workflow.json",
+                "墨西哥串金ltv告警",
+                "MX_CHUANJIN_LTV",
+                "--capital chuanjin",
+                "--capital new_share",
+            ),
+        ]
+
+        webhook_paths = set()
+        for relative_path, workflow_name, webhook_path, included_flag, excluded_flag in workflow_specs:
+            workflow = json.loads((REPO_ROOT / relative_path).read_text(encoding="utf-8"))
+            self.assertEqual(workflow["name"], workflow_name)
+            webhook_nodes = [node for node in workflow["nodes"] if node["type"] == "n8n-nodes-base.webhook"]
+            run_nodes = [node for node in workflow["nodes"] if node["name"].endswith("LTV告警触发")]
+            self.assertEqual(len(webhook_nodes), 1)
+            self.assertEqual(len(run_nodes), 1)
+            self.assertEqual(webhook_nodes[0]["parameters"]["path"], webhook_path)
+            webhook_paths.add(webhook_path)
+            command = run_nodes[0]["parameters"]["command"]
+            self.assertIn(included_flag, command)
+            self.assertNotIn(excluded_flag, command)
+            self.assertIn(f"--bot-id '{expected_bot_id}'", command)
+
+        self.assertEqual(webhook_paths, {"MX_NEW_SHARE_LTV", "MX_CHUANJIN_LTV"})
 
 
 if __name__ == "__main__":
